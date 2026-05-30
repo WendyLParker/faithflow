@@ -1,23 +1,22 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Models;   // This should work now
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Swagger Configuration
+// Swagger
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo 
-    { 
-        Title = "FaithFlow API", 
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "FaithFlow API",
         Version = "v1",
-        Description = "Prayer Tracking API with AWS Cognito Auth"
+        Description = "Prayer Tracking API with AWS Cognito"
     });
-    
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -43,7 +42,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// === AWS Cognito JWT Authentication ===
+// Cognito JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -61,7 +60,6 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

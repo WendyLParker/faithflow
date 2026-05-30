@@ -1,0 +1,21 @@
+# .NET folders
+backend/**/bin/
+backend/**/obj/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Cache & temp
+.cache/
+**/.cache/
+*.log
+.env
+
+# macOS
+.DS_Store
+
+# Visual Studio / Rider
+.vscode/
+.idea/
