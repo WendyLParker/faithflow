@@ -1,58 +1,98 @@
 # FaithFlow 🙏
 
-**A clean, beautiful mobile-first PWA to help build consistent prayer habits and grow in faith.**
+**A beautiful mobile-first Progressive Web App to help build consistent prayer habits.**
 
-Built with love to make prayer tracking simple, encouraging, and meaningful.
+FaithFlow makes daily prayer simple, encouraging, and meaningful — with streak tracking, AI-powered prompts, answered prayer celebrations, and daily Bible verses.
 
-## ✨ Features (Planned)
 
-- Track daily prayers with streaks
-- Mark prayers as answered with celebration
-- AI-powered prayer prompts (Grok)
-- Daily Bible verse
-- Prayer history & journal
-- Offline support (PWA)
-- Beautiful mobile experience
+## ✨ Features
+
+- 📝 Easy prayer logging with categories
+- 🔥 Prayer streak counter + encouragement messages
+- 🤖 AI Assistant (Grok) – prayer prompts & weekly summaries
+- 📖 Daily Bible verse
+- ✅ Mark prayers as answered with celebration
+- 📊 Beautiful progress charts
+- 📱 Fully offline capable PWA (installable on phone)
+- 🔐 Secure authentication with AWS Cognito
 
 ## 🛠 Tech Stack
 
-- **Frontend**: Vite + React + TypeScript + Tailwind CSS + PWA
-- **Backend**: .NET 8 Web API
-- **Auth**: AWS Cognito
-- **Hosting**: AWS Amplify
-- **AI**: Grok API
-- **Storage**: AWS S3 (optional)
-- **Database**: SQLite (dev) → RDS / DynamoDB (prod)
+| Layer       | Technology |
+|-------------|----------|
+| **Frontend** | Vite + React + TypeScript + Tailwind CSS + PWA |
+| **Backend**  | .NET 8 Web API + AWS Lambda |
+| **Auth**     | AWS Cognito |
+| **Hosting**  | AWS Amplify |
+| **Storage**  | AWS S3 (voice notes & images) |
+| **Database** | SQLite (dev) → Amazon RDS / DynamoDB |
+| **AI**       | Grok API |
 
 ## 📁 Project Structure
-
 ```bash
 faithflow/
-├── frontend/              # Vite + React + TS + Tailwind + PWA
-├── backend/               # .NET 8 Web API
-├── docs/
-│   ├── architecture.md
-├── README.md
-├── .gitignore
+├── frontend/  # React + Vite PWA
+├── backend/   # .NET 8 Web API
+├── docs/      # Architecture & notes
+└── README.md
+```
 
+---
+## 🚀 Quick Start
 
-```markdown
-## 📋 Current Phase
+### Prerequisites
+- Node.js (v20 or higher)
+- .NET 8 SDK
+- AWS Account (for Amplify & Cognito)
 
-**Phase 1** — Setup & Architecture → **In Progress**
+### 1. Clone the Repository
+```base
+git clone
+cd faithflow
+```
 
-- [x] Create GitHub repo + monorepo folders
-- [x] Branching strategy (`main` + `develop`)
-- [x] Frontend scaffolding + Tailwind + Bottom Navigation
-- [x] Architecture diagram (Mermaid)
-- [x] Basic README
-- [ ] Setup AWS Amplify + Cognito User Pool
-- [ ] Setup .NET 8 Backend
-
-## 🚀 Quick Start (Frontend)
-
+### 2. Frontend
 ```bash
-# From project root
 cd frontend
 npm install
 npm run dev
+```
+
+Open this URL in browser: http://localhost:5173
+
+### 3. Backend
+```bash
+cd backend
+dotnet restore
+dotnet run
+```
+
+API will run at: https://localhost:5001 (or similar port)
+
+## 📋 Available Scripts
+
+### Frontend
+- `npm run dev` — Start development server
+- `npm run build` — Create production build
+- `npm run lint` — Run ESLint
+
+### Backend
+- `dotnet watch run` — Run with hot reload
+- `dotnet build`
+
+## 🏗 Project Phases
+
+- [x] Phase 1: Setup & Architecture
+- [ ] Phase 2: Backend Core + Authentication
+- [ ] Phase 3: AI Integration
+- [ ] Phase 4: Frontend UI
+- [ ] Phase 5: Polish & Faith Features
+- [ ] Phase 6: Deploy to AWS Amplify
+
+## 📄 License
+
+MIT License
+
+---
+
+**Made with ❤️ for growing in faith**
