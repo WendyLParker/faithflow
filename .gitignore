@@ -19,3 +19,6 @@ frontend/.vite/
 # Visual Studio / Rider
 .vscode/
 .idea/
+
+# .NET local development settings
+Properties/launchSettings.json
