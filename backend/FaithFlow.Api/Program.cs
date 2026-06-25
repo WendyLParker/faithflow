@@ -11,23 +11,18 @@ using FaithFlow.Backend.DTOs.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers(options =>
-{
-    //options.Filters.Add<ValidationFilter>();
-});
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Register our services
+// Register services
 builder.Services.AddScoped<IPrayerRepository, PrayerService>();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-//FluentValidation
+// FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<PrayerCreateDtoValidator>();
 
-//Validation Filter
-//builder.Services.AddScoped<ValidationFilter>();
-// ====================== Swagger Configuration ======================
+// ====================== Swagger ======================
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -51,84 +46,94 @@ builder.Services.AddSwaggerGen(c =>
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             new string[] {}
         }
     });
 });
 
-// ====================== AWS Cognito Authentication ======================
+// ====================== Authentication ======================
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = builder.Configuration["Cognito:Authority"];
-        options.Audience = builder.Configuration["Cognito:ClientId"];
+        var authority = builder.Configuration["Cognito:Authority"];
+
+        options.Authority = authority;
+        options.MetadataAddress = $"{authority}/.well-known/openid-configuration";
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = false,
+            ValidateIssuer = true,
+            ValidIssuer = authority,
             ValidateAudience = false,
             ValidateLifetime = true,
-            ValidateIssuerSigningKey = false,
-            RequireSignedTokens = false
+            ValidateIssuerSigningKey = true,
+            ClockSkew = TimeSpan.FromMinutes(5)
         };
 
         options.Events = new JwtBearerEvents
         {
-            OnAuthenticationFailed = context =>
+            OnMessageReceived = ctx =>
             {
-                Console.WriteLine($"❌ AUTH FAILED: {context.Exception.Message}");
+                var header = ctx.Request.Headers.Authorization.FirstOrDefault() ?? "[NO HEADER]";
+                Console.WriteLine($"[OnMessageReceived] Header: {header.Substring(0, Math.Min(100, header.Length))}...");
+                if (header.StartsWith("Bearer "))
+                {
+                    ctx.Token = header.Substring(7).Trim();
+                    Console.WriteLine($"[OnMessageReceived] Token extracted, length: {ctx.Token.Length}");
+                }
                 return Task.CompletedTask;
             },
-            OnTokenValidated = context =>
+
+            OnTokenValidated = ctx =>
             {
-                Console.WriteLine("✅ Token validated successfully!");
-                Console.WriteLine($"Claims count: {context.Principal?.Claims.Count() ?? 0}");
+                Console.WriteLine("✅ TOKEN VALIDATED SUCCESSFULLY");
+                var sub = ctx.Principal?.FindFirst("sub")?.Value;
+                Console.WriteLine($"   Sub claim: {sub}");
+                return Task.CompletedTask;
+            },
+
+            OnAuthenticationFailed = ctx =>
+            {
+                Console.WriteLine("🔴 AUTH FAILED: " + ctx.Exception.Message);
+                if (ctx.Exception.InnerException != null)
+                    Console.WriteLine("   Inner: " + ctx.Exception.InnerException.Message);
                 return Task.CompletedTask;
             }
         };
     });
 
-// ====================== CORS (Important for Frontend) ======================
+builder.Services.AddAuthorization();
+
+// ====================== CORS ======================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.AllowAnyOrigin()
-             .AllowAnyHeader()
-             .AllowAnyMethod();
-        // policy.WithOrigins("http://localhost:5173")   // Vite default port
-        //       .AllowAnyHeader()
-        //       .AllowAnyMethod()
-        //       .AllowCredentials();                    // Important for auth later
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
 var app = builder.Build();
 
-// Middleware
+// ====================== Middleware ======================
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-
-    // Explicitly allow anonymous access to Swagger paths
-    app.MapSwagger().AllowAnonymous();
 }
-
-if (!app.Environment.IsDevelopment())
+else
 {
     app.UseHttpsRedirection();
 }
+
 app.UseCors("AllowFrontend");
 app.UseMiddleware<ApiExceptionMiddleware>();
 
-app.UseAuthentication();   // Must come before Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -3,6 +3,8 @@ using FaithFlow.Backend.Models;
 using FaithFlow.Backend.DTOs;
 using FaithFlow.Backend.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace FaithFlow.Backend.Controllers
 {
@@ -21,14 +23,15 @@ namespace FaithFlow.Backend.Controllers
 
         private string GetCurrentUserId()
         {
-            // Try normal way first
+            // 1. Try standard claims first
             var sub = User.FindFirst("sub")?.Value
-                   ?? User.FindFirst("cognito:username")?.Value;
+                   ?? User.FindFirst("cognito:username")?.Value
+                   ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
 
             if (!string.IsNullOrEmpty(sub))
                 return sub;
 
-            // Manual fallback - extract sub from token
+            // 2. Manual fallback - parse token and attach claims
             var authHeader = Request.Headers.Authorization.FirstOrDefault();
             if (authHeader?.StartsWith("Bearer ") == true)
             {
@@ -40,25 +43,46 @@ namespace FaithFlow.Backend.Controllers
                     {
                         var payload = parts[1];
                         payload = payload.PadRight((payload.Length + 3) & ~3, '=');
+
                         var bytes = Convert.FromBase64String(payload);
                         var json = System.Text.Encoding.UTF8.GetString(bytes);
 
-                        // Extract sub
-                        int subStart = json.IndexOf("\"sub\":\"") + 7;
-                        if (subStart > 6)
+                        using var doc = System.Text.Json.JsonDocument.Parse(json);
+                        var root = doc.RootElement;
+
+                        var userId = root.TryGetProperty("sub", out var subProp)
+                            ? subProp.GetString()
+                            : "unknown-user";
+
+                        // === Build and attach claims ===
+                        var claims = new List<Claim>();
+
+                        foreach (var prop in root.EnumerateObject())
                         {
-                            int subEnd = json.IndexOf("\"", subStart);
-                            return json.Substring(subStart, subEnd - subStart);
+                            claims.Add(new Claim(prop.Name, prop.Value.ToString() ?? ""));
                         }
+
+                        // Add standard NameIdentifier claim
+                        claims.Add(new Claim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier", userId));
+
+                        var identity = new ClaimsIdentity(claims, "Cognito");
+                        HttpContext.User = new ClaimsPrincipal(identity);
+
+                        Console.WriteLine($"✅ Manual claims attached for user: {userId}");
+                        return userId;
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"❌ Manual token parsing failed: {ex.Message}");
+                }
             }
 
             return "unknown-user";
         }
 
         [HttpGet("debug-token")]
+        [AllowAnonymous]
         public IActionResult DebugToken()
         {
             var token = Request.Headers.Authorization.FirstOrDefault();
@@ -74,6 +98,7 @@ namespace FaithFlow.Backend.Controllers
         }
 
         [HttpGet("debug-auth")]
+        [AllowAnonymous]
         public IActionResult DebugAuth()
         {
             var authority = _configuration["Cognito:Authority"];   // You'll need to inject IConfiguration
@@ -99,6 +124,7 @@ namespace FaithFlow.Backend.Controllers
         }
 
         [HttpGet("debug-raw-token")]
+        [AllowAnonymous]
         public IActionResult DebugRawToken()
         {
             var authHeader = Request.Headers.Authorization.FirstOrDefault();
@@ -136,6 +162,7 @@ namespace FaithFlow.Backend.Controllers
         }
         // GET: api/prayer
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<PrayerResponseDto>>> GetAll()
         {
             var userId = GetCurrentUserId();
@@ -160,6 +187,7 @@ namespace FaithFlow.Backend.Controllers
 
         // GET: api/prayer/5
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<PrayerResponseDto>> GetById(int id)
         {
             var userId = GetCurrentUserId();
@@ -187,6 +215,7 @@ namespace FaithFlow.Backend.Controllers
 
         // POST: api/prayer
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<PrayerResponseDto>> Create([FromBody] PrayerCreateDto dto)
         {
             var userId = GetCurrentUserId();
@@ -217,6 +246,7 @@ namespace FaithFlow.Backend.Controllers
 
         // PUT: api/prayer/5   (Update prayer)
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<ActionResult<PrayerResponseDto>> Update(int id, [FromBody] PrayerUpdateDto dto)
         {
             var userId = GetCurrentUserId();
@@ -251,6 +281,7 @@ namespace FaithFlow.Backend.Controllers
 
         // DELETE: api/prayer/5
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
             var userId = GetCurrentUserId();
