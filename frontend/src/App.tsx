@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Plus, Home, List, Bot, Flame } from 'lucide-react'
+import TestPrayer from './components/TestPrayer'
 
 function App() {
   const [currentTab, setCurrentTab] = useState<'home' | 'prayers' | 'add' | 'ai'>('home')
@@ -46,7 +47,7 @@ function App() {
 
         {currentTab === 'add' && (
           <div className="p-6 text-center text-gray-500 pt-20">
-            New Prayer Entry Form<br />Coming soon
+            <TestPrayer/>
           </div>
         )}
 

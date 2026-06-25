@@ -1,58 +1,62 @@
 using FaithFlow.Backend.Models;
-using FaithFlow.Backend.DTOs;
 using FaithFlow.Backend.Interfaces;
+using FaithFlow.Backend.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace FaithFlow.Backend.Services
 {
     public class PrayerService : IPrayerRepository
     {
-        // For now we'll use in-memory storage (SQLite/EF Core coming soon)
-        private readonly List<Prayer> _prayers = new();
+        private readonly ApplicationDbContext _context;
 
-        public Task<Prayer?> GetByIdAsync(int id, string userId)
+        public PrayerService(ApplicationDbContext context)
         {
-            var prayer = _prayers.FirstOrDefault(p => p.Id == id && p.UserId == userId);
-            return Task.FromResult(prayer);
+            _context = context;
         }
 
-        public Task<IEnumerable<Prayer>> GetAllByUserAsync(string userId)
+        public async Task<Prayer?> GetByIdAsync(int id, string userId)
         {
-            var userPrayers = _prayers.Where(p => p.UserId == userId);
-            return Task.FromResult(userPrayers);
+            return await _context.Prayers
+                .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
         }
 
-        public Task<Prayer> AddAsync(Prayer prayer)
+        public async Task<IEnumerable<Prayer>> GetAllByUserAsync(string userId)
         {
-            prayer.Id = _prayers.Count + 1;
-            _prayers.Add(prayer);
-            return Task.FromResult(prayer);
+            return await _context.Prayers
+                .Where(p => p.UserId == userId)
+                .OrderByDescending(p => p.PrayerDate)
+                .ToListAsync();
         }
 
-        public Task UpdateAsync(Prayer prayer)
+        public async Task<Prayer> AddAsync(Prayer prayer)
         {
-            var existing = _prayers.FirstOrDefault(p => p.Id == prayer.Id);
-            if (existing != null)
-            {
-                existing.Title = prayer.Title;
-                existing.Content = prayer.Content;
-                existing.IsAnswered = prayer.IsAnswered;
-                existing.AnsweredDate = prayer.AnsweredDate;
-            }
-            return Task.CompletedTask;
+            _context.Prayers.Add(prayer);
+            await _context.SaveChangesAsync();
+            return prayer;
         }
 
-        public Task DeleteAsync(int id, string userId)
+        public async Task UpdateAsync(Prayer prayer)
         {
-            var prayer = _prayers.FirstOrDefault(p => p.Id == id && p.UserId == userId);
+            _context.Prayers.Update(prayer);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(int id, string userId)
+        {
+            var prayer = await _context.Prayers
+                .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
+
             if (prayer != null)
-                _prayers.Remove(prayer);
-            return Task.CompletedTask;
+            {
+                _context.Prayers.Remove(prayer);
+                await _context.SaveChangesAsync();
+            }
         }
 
-        public Task<bool> ExistsAsync(int id, string userId)
+        public async Task<bool> ExistsAsync(int id, string userId)
         {
-            var exists = _prayers.Any(p => p.Id == id && p.UserId == userId);
-            return Task.FromResult(exists);
+            return await _context.Prayers
+                .AnyAsync(p => p.Id == id && p.UserId == userId);
         }
     }
 }

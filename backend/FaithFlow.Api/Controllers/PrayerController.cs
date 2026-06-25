@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using FaithFlow.Backend.Models;
 using FaithFlow.Backend.DTOs;
 using FaithFlow.Backend.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FaithFlow.Backend.Controllers
 {
@@ -10,22 +11,136 @@ namespace FaithFlow.Backend.Controllers
     public class PrayerController : ControllerBase
     {
         private readonly IPrayerRepository _prayerService;
+        private readonly IConfiguration _configuration;
 
-        public PrayerController(IPrayerRepository prayerService)
+        public PrayerController(IPrayerRepository prayerService, IConfiguration configuration)
         {
             _prayerService = prayerService;
+            _configuration = configuration;
         }
 
+        private string GetCurrentUserId()
+        {
+            // Try normal way first
+            var sub = User.FindFirst("sub")?.Value
+                   ?? User.FindFirst("cognito:username")?.Value;
+
+            if (!string.IsNullOrEmpty(sub))
+                return sub;
+
+            // Manual fallback - extract sub from token
+            var authHeader = Request.Headers.Authorization.FirstOrDefault();
+            if (authHeader?.StartsWith("Bearer ") == true)
+            {
+                try
+                {
+                    var token = authHeader.Substring(7).Trim();
+                    var parts = token.Split('.');
+                    if (parts.Length > 1)
+                    {
+                        var payload = parts[1];
+                        payload = payload.PadRight((payload.Length + 3) & ~3, '=');
+                        var bytes = Convert.FromBase64String(payload);
+                        var json = System.Text.Encoding.UTF8.GetString(bytes);
+
+                        // Extract sub
+                        int subStart = json.IndexOf("\"sub\":\"") + 7;
+                        if (subStart > 6)
+                        {
+                            int subEnd = json.IndexOf("\"", subStart);
+                            return json.Substring(subStart, subEnd - subStart);
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            return "unknown-user";
+        }
+
+        [HttpGet("debug-token")]
+        public IActionResult DebugToken()
+        {
+            var token = Request.Headers.Authorization.FirstOrDefault();
+            var userId = GetCurrentUserId();   // your existing method
+
+            return Ok(new
+            {
+                hasToken = !string.IsNullOrEmpty(token),
+                tokenPreview = token?.Substring(0, 50) + "...",
+                userId = userId,
+                claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList()
+            });
+        }
+
+        [HttpGet("debug-auth")]
+        public IActionResult DebugAuth()
+        {
+            var authority = _configuration["Cognito:Authority"];   // You'll need to inject IConfiguration
+            var clientId = _configuration["Cognito:ClientId"];
+
+            var authHeader = Request.Headers.Authorization.FirstOrDefault();
+
+            Console.WriteLine("=== AUTH DEBUG ===");
+            Console.WriteLine($"Authority: {authority}");
+            Console.WriteLine($"ClientId : {clientId}");
+            Console.WriteLine($"Auth Header: {authHeader}");
+            Console.WriteLine($"Token length: {authHeader?.Length ?? 0}");
+            Console.WriteLine("==================");
+
+            return Ok(new
+            {
+                authority,
+                clientId,
+                hasAuthHeader = !string.IsNullOrEmpty(authHeader),
+                tokenPreview = authHeader?.Substring(0, Math.Min(100, authHeader.Length)) + "...",
+                tokenLength = authHeader?.Length ?? 0
+            });
+        }
+
+        [HttpGet("debug-raw-token")]
+        public IActionResult DebugRawToken()
+        {
+            var authHeader = Request.Headers.Authorization.FirstOrDefault();
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            {
+                return BadRequest("No Bearer token found");
+            }
+
+            var token = authHeader.Substring("Bearer ".Length).Trim();
+
+            // Simple base64 decode of the payload (middle part)
+            try
+            {
+                var parts = token.Split('.');
+                if (parts.Length < 2)
+                    return BadRequest("Invalid token format");
+
+                var payload = parts[1];
+                // Add padding if needed
+                payload = payload.PadRight((payload.Length + 3) & ~3, '=');
+
+                var bytes = Convert.FromBase64String(payload);
+                var json = System.Text.Encoding.UTF8.GetString(bytes);
+
+                return Ok(new
+                {
+                    rawTokenLength = token.Length,
+                    payload = json
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Failed to decode: {ex.Message}");
+            }
+        }
         // GET: api/prayer
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PrayerResponseDto>>> GetAll()
         {
-            var userId = User.Identity?.Name; // Will come from Cognito JWT later
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
+            var userId = GetCurrentUserId();
             var prayers = await _prayerService.GetAllByUserAsync(userId);
-            
+
             var dtos = prayers.Select(p => new PrayerResponseDto
             {
                 Id = p.Id,
@@ -47,13 +162,12 @@ namespace FaithFlow.Backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<PrayerResponseDto>> GetById(int id)
         {
-            var userId = User.Identity?.Name;
-            if (string.IsNullOrEmpty(userId)) return Unauthorized();
-
+            var userId = GetCurrentUserId();
             var prayer = await _prayerService.GetByIdAsync(id, userId);
-            if (prayer == null) return NotFound();
 
-            // Convert to DTO...
+            if (prayer == null)
+                return NotFound();
+
             var dto = new PrayerResponseDto
             {
                 Id = prayer.Id,
@@ -75,8 +189,7 @@ namespace FaithFlow.Backend.Controllers
         [HttpPost]
         public async Task<ActionResult<PrayerResponseDto>> Create([FromBody] PrayerCreateDto dto)
         {
-            var userId = User.Identity?.Name;
-            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+            var userId = GetCurrentUserId();
 
             var prayer = new Prayer
             {
@@ -95,10 +208,59 @@ namespace FaithFlow.Backend.Controllers
                 Title = created.Title,
                 Content = created.Content,
                 PrayerDate = created.PrayerDate,
-                Categories = created.Categories
+                Categories = created.Categories,
+                IsAnswered = created.IsAnswered
             };
 
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
         }
+
+        // PUT: api/prayer/5   (Update prayer)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<PrayerResponseDto>> Update(int id, [FromBody] PrayerUpdateDto dto)
+        {
+            var userId = GetCurrentUserId();
+            var prayer = await _prayerService.GetByIdAsync(id, userId);
+
+            if (prayer == null) return NotFound();
+
+            // Update fields
+            if (dto.Content != null) prayer.Content = dto.Content;
+            if (dto.IsAnswered.HasValue)
+            {
+                prayer.IsAnswered = dto.IsAnswered.Value;
+                prayer.AnsweredDate = dto.IsAnswered.Value ? DateTime.UtcNow : null;
+            }
+
+            await _prayerService.UpdateAsync(prayer);
+
+            // Return updated prayer
+            var response = new PrayerResponseDto
+            {
+                Id = prayer.Id,
+                Title = prayer.Title,
+                Content = prayer.Content,
+                PrayerDate = prayer.PrayerDate,
+                IsAnswered = prayer.IsAnswered,
+                AnsweredDate = prayer.AnsweredDate,
+                Categories = prayer.Categories
+            };
+
+            return Ok(response);
+        }
+
+        // DELETE: api/prayer/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var userId = GetCurrentUserId();
+            var prayer = await _prayerService.GetByIdAsync(id, userId);
+
+            if (prayer == null) return NotFound();
+
+            await _prayerService.DeleteAsync(id, userId);
+            return NoContent();   // 204 No Content = success
+        }
+
     }
 }
