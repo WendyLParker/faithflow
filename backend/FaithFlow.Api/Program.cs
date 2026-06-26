@@ -1,13 +1,28 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;   // This should work now
+using Microsoft.OpenApi.Models;
+using FaithFlow.Backend.Interfaces;
+using FaithFlow.Backend.Services;
+using FaithFlow.Backend.Data;
+using Microsoft.EntityFrameworkCore;
+using FaithFlow.Backend.Common;
+using FluentValidation;
+using FaithFlow.Backend.DTOs.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Swagger
+// Register services
+builder.Services.AddScoped<IPrayerRepository, PrayerService>();
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<PrayerCreateDtoValidator>();
+
+// ====================== Swagger ======================
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -31,42 +46,93 @@ builder.Services.AddSwaggerGen(c =>
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             new string[] {}
         }
     });
 });
 
-// Cognito JWT Authentication
+// ====================== Authentication ======================
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = builder.Configuration["Cognito:Authority"];
+        var authority = builder.Configuration["Cognito:Authority"];
+
+        options.Authority = authority;
+        options.MetadataAddress = $"{authority}/.well-known/openid-configuration";
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidAudience = builder.Configuration["Cognito:ClientId"],
-            ValidateLifetime = true
+            ValidIssuer = authority,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ClockSkew = TimeSpan.FromMinutes(5)
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                var header = ctx.Request.Headers.Authorization.FirstOrDefault() ?? "[NO HEADER]";
+                Console.WriteLine($"[OnMessageReceived] Header: {header.Substring(0, Math.Min(100, header.Length))}...");
+                if (header.StartsWith("Bearer "))
+                {
+                    ctx.Token = header.Substring(7).Trim();
+                    Console.WriteLine($"[OnMessageReceived] Token extracted, length: {ctx.Token.Length}");
+                }
+                return Task.CompletedTask;
+            },
+
+            OnTokenValidated = ctx =>
+            {
+                Console.WriteLine("✅ TOKEN VALIDATED SUCCESSFULLY");
+                var sub = ctx.Principal?.FindFirst("sub")?.Value;
+                Console.WriteLine($"   Sub claim: {sub}");
+                return Task.CompletedTask;
+            },
+
+            OnAuthenticationFailed = ctx =>
+            {
+                Console.WriteLine("🔴 AUTH FAILED: " + ctx.Exception.Message);
+                if (ctx.Exception.InnerException != null)
+                    Console.WriteLine("   Inner: " + ctx.Exception.InnerException.Message);
+                return Task.CompletedTask;
+            }
         };
     });
 
 builder.Services.AddAuthorization();
 
+// ====================== CORS ======================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
+// ====================== Middleware ======================
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseHttpsRedirection();
+}
 
-app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
+app.UseMiddleware<ApiExceptionMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

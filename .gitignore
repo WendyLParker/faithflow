@@ -19,3 +19,17 @@ frontend/.vite/
 # Visual Studio / Rider
 .vscode/
 .idea/
+
+# .NET local development settings
+Properties/launchSettings.json
+
+# SQLite temporary files
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Frontend build artifacts
+frontend/dev-dist/
+
+# Optional but recommended
+backend/FaithFlow.Api/faithflow.db
