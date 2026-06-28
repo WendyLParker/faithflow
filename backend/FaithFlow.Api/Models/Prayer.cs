@@ -29,5 +29,7 @@ namespace FaithFlow.Backend.Models
         public string? ImageUrl { get; set; }
 
         public int StreakDays { get; set; } = 0;
+
+        public ICollection<ProgressNote> ProgressNotes { get; set; } = new List<ProgressNote>();
     }
 }
