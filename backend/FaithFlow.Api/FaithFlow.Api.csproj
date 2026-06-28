@@ -9,6 +9,9 @@
 
   <ItemGroup>
     <!-- Core Packages -->
+    <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.10.1" />
+    <PackageReference Include="AWSSDK.SSO" Version="4.0.3.8" />
+    <PackageReference Include="AWSSDK.SSOOIDC" Version="4.0.4.10" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
 

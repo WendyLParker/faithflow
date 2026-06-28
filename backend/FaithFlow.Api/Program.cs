@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using FaithFlow.Backend.Common;
 using FluentValidation;
 using FaithFlow.Backend.DTOs.Validators;
+using Amazon.CognitoIdentityProvider;
+using Microsoft.Extensions.Options;
+using Amazon;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +18,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 // Register services
+builder.Services.AddScoped<IProgressNoteRepository, ProgressNoteService>();
 builder.Services.AddScoped<IPrayerRepository, PrayerService>();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -53,11 +57,17 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// ====================== Cognito Settings ======================
+builder.Services.Configure<CognitoSettings>(
+    builder.Configuration.GetSection("Cognito"));
+
 // ====================== Authentication ======================
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var authority = builder.Configuration["Cognito:Authority"];
+        var cognitoSettings = builder.Configuration.GetSection("Cognito").Get<CognitoSettings>();
+
+        var authority = cognitoSettings?.Authority;
 
         options.Authority = authority;
         options.MetadataAddress = $"{authority}/.well-known/openid-configuration";
@@ -66,7 +76,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuer = true,
             ValidIssuer = authority,
+            // TODO: Fix audience validation before production
             ValidateAudience = false,
+            ValidAudience = cognitoSettings?.ClientId,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ClockSkew = TimeSpan.FromMinutes(5)
@@ -103,6 +115,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
+
+builder.Services.AddSingleton<IAmazonCognitoIdentityProvider>(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<CognitoSettings>>().Value;
+
+    // Use default credential chain + explicit profile if needed
+    return new AmazonCognitoIdentityProviderClient(
+        RegionEndpoint.GetBySystemName(settings.Region)
+    );
+});
 
 builder.Services.AddAuthorization();
 

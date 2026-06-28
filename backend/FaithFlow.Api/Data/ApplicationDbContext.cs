@@ -1,27 +1,32 @@
-using FaithFlow.Backend.Models;
 using Microsoft.EntityFrameworkCore;
+using FaithFlow.Backend.Models;
 
-namespace FaithFlow.Backend.Data
+namespace FaithFlow.Backend.Data;
+
+public class ApplicationDbContext : DbContext
 {
-    public class ApplicationDbContext : DbContext
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        : base(options)
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
-        {
-        }
+    }
 
-        // DbSets (Tables)
-        public DbSet<Prayer> Prayers { get; set; } = null!;
-        public DbSet<Category> Categories { get; set; } = null!;
-        public DbSet<JournalEntry> JournalEntries { get; set; } = null!;
+    public DbSet<Prayer> Prayers { get; set; }
+    public DbSet<ProgressNote> ProgressNotes { get; set; }
+    public DbSet<Category> Categories { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
 
-            // Optional: Make UserId indexed for faster queries
-            modelBuilder.Entity<Prayer>()
-                .HasIndex(p => p.UserId);
-        }
+        // Prayer <-> ProgressNote (One-to-Many)
+        modelBuilder.Entity<ProgressNote>()
+            .HasOne(pn => pn.Prayer)
+            .WithMany(p => p.ProgressNotes)
+            .HasForeignKey(pn => pn.PrayerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Optional: Global filter to only show current user's prayers
+        // modelBuilder.Entity<Prayer>()
+        //     .HasQueryFilter(p => p.UserId == _currentUserService.GetUserId());
     }
 }

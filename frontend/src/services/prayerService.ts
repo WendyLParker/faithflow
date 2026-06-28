@@ -28,6 +28,11 @@ export const prayerService = {
     return response.data;
   },
 
+  async getById(id: number) {
+    const response = await api.get<PrayerResponseDto>(`/api/prayer/${id}`);
+    return response.data;
+  },
+
   async create(data: PrayerCreateDto) {
     const response = await api.post<PrayerResponseDto>('/api/prayer', data);
     return response.data;
@@ -42,8 +47,7 @@ export const prayerService = {
     await api.delete(`/api/prayer/${id}`);
   },
 
-  // Convenience method
   async markAsAnswered(id: number) {
-    return await prayerService.update(id, { isAnswered: true });
-  }
+    return prayerService.update(id, { isAnswered: true });
+  },
 };

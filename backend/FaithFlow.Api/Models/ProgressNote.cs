@@ -1,6 +1,6 @@
 namespace FaithFlow.Backend.Models
 {
-    public class JournalEntry
+    public class ProgressNote
     {
         public int Id { get; set; }
         public string UserId { get; set; } = string.Empty;
@@ -11,5 +11,6 @@ namespace FaithFlow.Backend.Models
         public DateTime EntryDate { get; set; } = DateTime.UtcNow;
 
         public int? MoodRating { get; set; }            // 1-10 scale (optional)
+        public Prayer Prayer { get; set; } = null!;
     }
 }
