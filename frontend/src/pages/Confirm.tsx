@@ -1,22 +1,16 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
 
 const Confirm = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    confirmationCode: '',
-  });
+  const location = useLocation();
+  const prefilledEmail = (location.state as { email?: string } | null)?.email ?? '';
+
+  const [email, setEmail] = useState(prefilledEmail);
+  const [confirmationCode, setConfirmationCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +21,10 @@ const Confirm = () => {
       const response = await fetch(`${API_BASE_URL}/api/auth/confirm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          username: email,
+          confirmationCode,
+        }),
       });
 
       const data = await response.json();
@@ -38,7 +35,7 @@ const Confirm = () => {
       } else {
         setMessage(data.error || 'Confirmation failed');
       }
-    } catch (error) {
+    } catch {
       setMessage('Network error. Please try again.');
     } finally {
       setLoading(false);
@@ -51,22 +48,24 @@ const Confirm = () => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
-          type="text"
-          name="username"
-          placeholder="Email / Username"
-          value={formData.username}
-          onChange={handleChange}
+          type="email"
+          name="email"
+          placeholder="Email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
+          autoComplete="email"
           className="w-full p-3 border rounded-lg"
         />
 
         <input
           type="text"
           name="confirmationCode"
-          placeholder="Confirmation Code"
-          value={formData.confirmationCode}
-          onChange={handleChange}
+          placeholder="Confirmation code"
+          value={confirmationCode}
+          onChange={(e) => setConfirmationCode(e.target.value)}
           required
+          autoComplete="one-time-code"
           className="w-full p-3 border rounded-lg"
         />
 

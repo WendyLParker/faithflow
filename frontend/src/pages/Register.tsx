@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    username: '',
     email: '',
     password: '',
   });
@@ -24,7 +24,7 @@ const Register = () => {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -34,11 +34,11 @@ const Register = () => {
 
       if (response.ok) {
         setMessage('Registration successful! Check your email for the confirmation code.');
-        setTimeout(() => navigate('/confirm'), 2000);
+        setTimeout(() => navigate('/confirm', { state: { email: formData.email } }), 2000);
       } else {
         setMessage(data.error || 'Registration failed');
       }
-    } catch (error) {
+    } catch {
       setMessage('Network error. Please try again.');
     } finally {
       setLoading(false);
@@ -51,22 +51,13 @@ const Register = () => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
-          type="text"
-          name="username"
-          placeholder="Username (will be your email)"
-          value={formData.username}
-          onChange={handleChange}
-          required
-          className="w-full p-3 border rounded-lg"
-        />
-
-        <input
           type="email"
           name="email"
-          placeholder="Email Address"
+          placeholder="Email address"
           value={formData.email}
           onChange={handleChange}
           required
+          autoComplete="email"
           className="w-full p-3 border rounded-lg"
         />
 
@@ -77,6 +68,7 @@ const Register = () => {
           value={formData.password}
           onChange={handleChange}
           required
+          autoComplete="new-password"
           className="w-full p-3 border rounded-lg"
         />
 

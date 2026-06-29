@@ -26,22 +26,6 @@ public class PrayerController : ControllerBase
             ?? "unknown-user";
     }
 
-    // ==================== DEBUG ====================
-    [HttpGet("debug")]
-    [AllowAnonymous]
-    public IActionResult Debug()
-    {
-        var userId = GetCurrentUserId();
-        var token = Request.Headers.Authorization.FirstOrDefault();
-
-        return Ok(new
-        {
-            hasToken = !string.IsNullOrEmpty(token),
-            userId = userId,
-            isAuthenticated = User.Identity?.IsAuthenticated ?? false
-        });
-    }
-
     // GET: api/prayer
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PrayerResponseDto>>> GetAll()
