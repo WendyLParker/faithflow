@@ -9,27 +9,26 @@ flowchart TD
     subgraph Frontend ["Frontend - Vite + React + TypeScript + Tailwind + PWA"]
         UI[Mobile-First UI\nBottom Navigation]
         PWA[PWA Service Worker\nOffline Support]
-        State[TanStack Query + Zustand]
+        State[TanStack Query]
     end
 
-    subgraph Auth ["AWS Cognito\nUser Pool + Hosted UI"]
+    subgraph Auth ["AWS Cognito\nUser Pool"]
         Login[Register / Login]
         JWT[JWT Tokens]
     end
 
-    subgraph Backend [".NET 8 Web API + AWS Amplify"]
-        API[REST API Endpoints\n/Prayers\n/Journal\n/AI-Suggest]
+    subgraph Backend [".NET 8 Web API"]
+        API[REST API Endpoints\n/Prayers\n/ProgressNotes\n/AI/chat]
         AuthMW[Cognito JWT Auth Middleware]
-        Lambda[AWS Lambda\nAI Summaries]
     end
 
     subgraph Data ["Data Layer"]
-        DB[(Amazon RDS PostgreSQL\nor DynamoDB)]
+        DB[(SQLite dev → RDS PostgreSQL)]
         S3[AWS S3\nVoice Notes + Images]
     end
 
-    subgraph AI ["Grok API"]
-        Prompts[Prayer Prompts\nEncouragement\nWeekly Summaries]
+    subgraph AI ["OpenAI API"]
+        Chat[Prayer Prompts\nEncouragement Chat]
     end
 
     subgraph External ["External Services"]
@@ -43,9 +42,12 @@ flowchart TD
     AuthMW --> Auth
     API --> DB
     API --> S3
-    API --> Lambda
-    Lambda --> Grok
+    API --> Chat
     API --> Bible
 
-    Frontend --> Amplify
-    Backend --> Amplify
+    Frontend --> Amplify[AWS Amplify\nplanned hosting]
+```
+
+## AI integration (planned)
+
+OpenAI is called **only from the .NET API** — the API key stays on the server. The React app sends user messages to `POST /api/ai/chat`; the backend applies a FaithFlow system prompt and forwards the request to OpenAI (`gpt-4o-mini` or similar).

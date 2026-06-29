@@ -1,93 +1,131 @@
 # FaithFlow 🙏
 
-**A beautiful mobile-first Progressive Web App to help build consistent prayer habits.**
+![CI](https://github.com/WendyLParker/faithflow/actions/workflows/ci.yml/badge.svg)
 
-FaithFlow makes daily prayer simple, encouraging, and meaningful — with streak tracking, AI-powered prompts, answered prayer celebrations, and daily Bible verses.
+**A mobile-first Progressive Web App to help build consistent prayer habits.**
 
+FaithFlow is being built to make daily prayer simple, encouraging, and meaningful — with prayer tracking, answered-prayer celebrations, streaks, AI prompts, and daily Scripture. **The core app is working in local development today; several roadmap features are still in progress.**
 
-## ✨ Features
+## ✅ What works today
 
-- 📝 Easy prayer logging with categories
-- 🔥 Prayer streak counter + encouragement messages
-- 🤖 AI Assistant (Grok) – prayer prompts & weekly summaries
+### Authentication
+- AWS Cognito registration, email confirmation, and login
+- JWT-protected API endpoints
+- Protected frontend routes
+
+### Prayer requests
+- Create, list, view, update, and delete prayer requests
+- Category tags (Health, Family, Work, and more)
+- Mark requests as answered (“Praise Reports”)
+- Dashboard with active vs. answered counts and recent requests
+
+### Backend API
+- .NET 8 Web API with Swagger UI (development)
+- Entity Framework Core + SQLite (local dev)
+- Prayer and Progress Note REST endpoints
+- FluentValidation and global exception handling
+
+### Frontend
+- Vite + React + TypeScript + Tailwind CSS
+- TanStack Query for server state
+- Mobile-first layout with bottom navigation
+- PWA scaffold (`vite-plugin-pwa` — manifest in place; icons and offline caching still TODO)
+
+### Tooling
+- GitHub Actions CI — lint + build on push and pull requests to `main`
+
+## 🚧 Coming soon
+
+- 🔥 Prayer streak counter and encouragement messages
+- 🤖 AI assistant (OpenAI) — prayer prompts and encouragement chat
 - 📖 Daily Bible verse
-- ✅ Mark prayers as answered with celebration
-- 📊 Beautiful progress charts
-- 📱 Fully offline capable PWA (installable on phone)
-- 🔐 Secure authentication with AWS Cognito
+- 📊 Progress charts and progress-note journaling UI
+- 📎 Voice notes and image attachments (S3)
+- 📱 Full offline-capable PWA (installable with proper icons and caching)
+- ☁️ Deploy to AWS Amplify and production database (RDS)
 
-## 🛠 Tech Stack
+## 🛠 Tech stack
 
-| Layer       | Technology |
-|-------------|----------|
-| **Frontend** | Vite + React + TypeScript + Tailwind CSS + PWA |
-| **Backend**  | .NET 8 Web API + AWS Lambda |
-| **Auth**     | AWS Cognito |
-| **Hosting**  | AWS Amplify |
-| **Storage**  | AWS S3 (voice notes & images) |
-| **Database** | SQLite (dev) → Amazon RDS / DynamoDB |
-| **AI**       | Grok API |
+| Layer | In use now | Planned |
+|-------|------------|---------|
+| **Frontend** | Vite, React, TypeScript, Tailwind CSS, TanStack Query | PWA polish, Recharts |
+| **Backend** | .NET 8 Web API, EF Core, SQLite | OpenAI chat proxy endpoint |
+| **Auth** | AWS Cognito | — |
+| **Hosting** | Local dev | AWS Amplify |
+| **Storage** | — | AWS S3 (voice notes & images) |
+| **Database** | SQLite (dev) | Amazon RDS or DynamoDB |
+| **AI** | — | OpenAI API (`gpt-4o-mini`, server-side) |
 
-## 📁 Project Structure
+## 📁 Project structure
+
 ```bash
 faithflow/
-├── frontend/  # React + Vite PWA
-├── backend/   # .NET 8 Web API
-├── docs/      # Architecture & notes
-└── README.md
+├── frontend/          # React + Vite PWA
+├── backend/           # .NET 8 Web API
+│   └── FaithFlow.Api/
+├── docs/              # Architecture notes
+└── .github/workflows/ # CI
 ```
 
----
-## 🚀 Quick Start
+## 🚀 Quick start
 
 ### Prerequisites
-- Node.js (v20 or higher)
+- Node.js 20+
 - .NET 8 SDK
-- AWS Account (for Amplify & Cognito)
+- AWS account (Cognito user pool configured for auth)
 
-### 1. Clone the Repository
-```base
-git clone
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/WendyLParker/faithflow.git
 cd faithflow
 ```
 
 ### 2. Frontend
+
 ```bash
 cd frontend
+cp .env.example .env   # set VITE_API_BASE_URL if needed
 npm install
 npm run dev
 ```
 
-Open this URL in browser: http://localhost:5173
+Open [http://localhost:5173](http://localhost:5173)
 
 ### 3. Backend
+
 ```bash
-cd backend
+cd backend/FaithFlow.Api
 dotnet restore
 dotnet run
 ```
 
-API will run at: https://localhost:5001 (or similar port)
+- API: [http://localhost:5000](http://localhost:5000)
+- Swagger (dev only): [http://localhost:5000/swagger](http://localhost:5000/swagger)
 
-## 📋 Available Scripts
+Configure Cognito settings in `appsettings.Development.json` before using auth endpoints.
+
+## 📋 Available scripts
 
 ### Frontend
 - `npm run dev` — Start development server
-- `npm run build` — Create production build
+- `npm run build` — Production build
 - `npm run lint` — Run ESLint
 
 ### Backend
 - `dotnet watch run` — Run with hot reload
-- `dotnet build`
+- `dotnet build` — Compile the API
 
-## 🏗 Project Phases
+## 🏗 Project phases
 
-- [x] Phase 1: Setup & Architecture
-- [ ] Phase 2: Backend Core + Authentication
-- [ ] Phase 3: AI Integration
-- [ ] Phase 4: Frontend UI
-- [ ] Phase 5: Polish & Faith Features
-- [ ] Phase 6: Deploy to AWS Amplify
+- [x] **Phase 1:** Setup & architecture
+- [x] **Phase 2:** Backend core + Cognito authentication *(prayer & progress-note APIs)*
+- [ ] **Phase 3:** AI integration *(OpenAI — prayer prompts & encouragement chat)*
+- [ ] **Phase 4:** Frontend UI *(in progress — auth + prayer flows done; progress notes & AI tab pending)*
+- [ ] **Phase 5:** Polish & faith features *(streaks, charts, daily verse, celebrations)*
+- [ ] **Phase 6:** Deploy to AWS Amplify *(amplify.yml started; not live yet)*
+
+See [docs/architecture.md](docs/architecture.md) for the full system design.
 
 ## 📄 License
 
