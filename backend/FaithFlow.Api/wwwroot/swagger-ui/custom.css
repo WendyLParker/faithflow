@@ -1,0 +1,79 @@
+/*
+ * Swagger UI overrides for local development.
+ * Counteracts Tailwind Preflight (and other global CSS) when it loads on the
+ * same page and breaks flex layout, causing endpoint text to stack vertically.
+ */
+.swagger-ui {
+  isolation: isolate;
+}
+
+.swagger-ui .opblock-summary,
+.swagger-ui .opblock-summary-method,
+.swagger-ui .opblock-summary-path,
+.swagger-ui .opblock-summary-path a,
+.swagger-ui .opblock-summary-path span,
+.swagger-ui .opblock-summary-description,
+.swagger-ui .opblock-tag,
+.swagger-ui .opblock-tag small,
+.swagger-ui .info .title,
+.swagger-ui .info li,
+.swagger-ui .info p,
+.swagger-ui .btn,
+.swagger-ui label,
+.swagger-ui .tab li,
+.swagger-ui .model-title,
+.swagger-ui section.models h4,
+.swagger-ui table thead tr td,
+.swagger-ui table thead tr th,
+.swagger-ui .parameter__name,
+.swagger-ui .parameter__type,
+.swagger-ui .response-col_status,
+.swagger-ui .response-col_description,
+.swagger-ui .authorization__btn,
+.swagger-ui .select-label {
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
+.swagger-ui .opblock-summary {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+}
+
+.swagger-ui .opblock-summary-method {
+  display: block !important;
+  min-width: 80px !important;
+  width: auto !important;
+  flex: 0 0 auto !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+.swagger-ui .opblock-summary-path {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  word-break: normal !important;
+}
+
+.swagger-ui .opblock-summary-path a,
+.swagger-ui .opblock-summary-path span {
+  display: inline !important;
+  white-space: nowrap !important;
+}
+
+.swagger-ui svg {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  max-width: none !important;
+}
+
+.swagger-ui wbr {
+  display: none !important;
+}

@@ -144,8 +144,14 @@ var app = builder.Build();
 // ====================== Middleware ======================
 if (app.Environment.IsDevelopment())
 {
+    app.UseStaticFiles();
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.DocumentTitle = "FaithFlow API";
+        c.DefaultModelsExpandDepth(-1);
+        c.InjectStylesheet("/swagger-ui/custom.css");
+    });
 }
 else
 {
