@@ -14,7 +14,11 @@ using Amazon;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.AddService<ValidationFilter>();
+});
+builder.Services.AddScoped<ValidationFilter>();
 builder.Services.AddEndpointsApiExplorer();
 
 // Register services
@@ -76,43 +80,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuer = true,
             ValidIssuer = authority,
-            // TODO: Fix audience validation before production
+            // TODO: Enable audience validation before production (ValidAudience = ClientId)
             ValidateAudience = false,
             ValidAudience = cognitoSettings?.ClientId,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ClockSkew = TimeSpan.FromMinutes(5)
-        };
-
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = ctx =>
-            {
-                var header = ctx.Request.Headers.Authorization.FirstOrDefault() ?? "[NO HEADER]";
-                Console.WriteLine($"[OnMessageReceived] Header: {header.Substring(0, Math.Min(100, header.Length))}...");
-                if (header.StartsWith("Bearer "))
-                {
-                    ctx.Token = header.Substring(7).Trim();
-                    Console.WriteLine($"[OnMessageReceived] Token extracted, length: {ctx.Token.Length}");
-                }
-                return Task.CompletedTask;
-            },
-
-            OnTokenValidated = ctx =>
-            {
-                Console.WriteLine("✅ TOKEN VALIDATED SUCCESSFULLY");
-                var sub = ctx.Principal?.FindFirst("sub")?.Value;
-                Console.WriteLine($"   Sub claim: {sub}");
-                return Task.CompletedTask;
-            },
-
-            OnAuthenticationFailed = ctx =>
-            {
-                Console.WriteLine("🔴 AUTH FAILED: " + ctx.Exception.Message);
-                if (ctx.Exception.InnerException != null)
-                    Console.WriteLine("   Inner: " + ctx.Exception.InnerException.Message);
-                return Task.CompletedTask;
-            }
         };
     });
 

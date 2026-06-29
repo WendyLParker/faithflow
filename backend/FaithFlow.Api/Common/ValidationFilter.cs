@@ -2,44 +2,45 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace FaithFlow.Backend.Common
+namespace FaithFlow.Backend.Common;
+
+public class ValidationFilter : IAsyncActionFilter
 {
-    public class ValidationFilter : IAsyncActionFilter
+    private readonly IServiceProvider _serviceProvider;
+
+    public ValidationFilter(IServiceProvider serviceProvider)
     {
-        private readonly IValidatorFactory _validatorFactory;
+        _serviceProvider = serviceProvider;
+    }
 
-        public ValidationFilter(IValidatorFactory validatorFactory)
+    public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    {
+        foreach (var argument in context.ActionArguments.Values)
         {
-            _validatorFactory = validatorFactory;
-        }
+            if (argument is null) continue;
 
-        public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
-        {
-            var actionArguments = context.ActionArguments;
+            var validatorType = typeof(IValidator<>).MakeGenericType(argument.GetType());
+            if (_serviceProvider.GetService(validatorType) is not IValidator validator)
+                continue;
 
-            foreach (var argument in actionArguments)
+            var validationResult = await validator.ValidateAsync(
+                new ValidationContext<object>(argument),
+                context.HttpContext.RequestAborted);
+
+            if (!validationResult.IsValid)
             {
-                var validator = _validatorFactory.GetValidator(argument.Value?.GetType());
-                if (validator != null)
+                context.Result = new BadRequestObjectResult(new
                 {
-                    var validationResult = await validator.ValidateAsync(new ValidationContext<object>(argument.Value!));
-
-                    if (!validationResult.IsValid)
-                    {
-                        context.Result = new BadRequestObjectResult(new
-                        {
-                            status = 400,
-                            title = "Validation Error",
-                            errors = validationResult.Errors.ToDictionary(
-                                e => e.PropertyName,
-                                e => new[] { e.ErrorMessage })
-                        });
-                        return;
-                    }
-                }
+                    status = 400,
+                    title = "Validation Error",
+                    errors = validationResult.Errors.ToDictionary(
+                        e => e.PropertyName,
+                        e => new[] { e.ErrorMessage })
+                });
+                return;
             }
-
-            await next();
         }
+
+        await next();
     }
 }

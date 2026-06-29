@@ -1,5 +1,5 @@
 import { Plus, Home, List, Bot, Flame, LogOut } from 'lucide-react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 
 import Register from './pages/Register';
 import Confirm from './pages/Confirm';
@@ -9,14 +9,15 @@ import PrayerList from './pages/PrayerList';
 import CreatePrayer from './pages/CreatePrayer';
 import PrayerDetail from './pages/PrayerDetail';
 import ProtectedRoute from './components/ProtectedRoute';
+import RootRedirect from './components/RootRedirect';
+import { AuthProvider, useAuth } from './hooks/useAuth';
 
 function AppContent() {
   const navigate = useNavigate();
-  const isLoggedIn = !!localStorage.getItem('accessToken');
+  const { isLoggedIn, logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('idToken');
+    logout();
     navigate('/login');
   };
 
@@ -78,8 +79,8 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="*" element={<RootRedirect />} />
         </Routes>
       </main>
 
@@ -128,7 +129,9 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </Router>
   );
 }

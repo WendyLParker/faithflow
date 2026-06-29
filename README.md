@@ -105,6 +105,8 @@ dotnet run
 
 Configure Cognito settings in `appsettings.Development.json` before using auth endpoints.
 
+The SQLite database (`faithflow.db`) is created automatically on first run via EF Core migrations.
+
 ## 📋 Available scripts
 
 ### Frontend
@@ -129,7 +131,7 @@ See [docs/architecture.md](docs/architecture.md) for the full system design.
 
 ## 📄 License
 
-MIT License
+MIT License — see [LICENSE](LICENSE)
 
 ---
 

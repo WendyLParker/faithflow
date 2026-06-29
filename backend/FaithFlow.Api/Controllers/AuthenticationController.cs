@@ -2,7 +2,7 @@ using Amazon.CognitoIdentityProvider;
 using Amazon.CognitoIdentityProvider.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using FaithFlow.Backend.Models.Auth;   // ← Matches your Models/Auth folder
+using FaithFlow.Backend.Models.Auth;
 
 namespace FaithFlow.Backend.Controllers;
 
@@ -26,14 +26,11 @@ public class AuthController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
-            
-        // Use email as username when Cognito is configured this way
-        string username = string.IsNullOrEmpty(request.Username) ? request.Email : request.Username;
 
         var signUpRequest = new SignUpRequest
         {
             ClientId = _settings.ClientId,
-            Username = request.Username,
+            Username = request.Email,
             Password = request.Password,
             UserAttributes = new List<AttributeType>
             {
@@ -53,7 +50,7 @@ public class AuthController : ControllerBase
         }
         catch (UsernameExistsException)
         {
-            return BadRequest(new { Error = "Username or email already exists." });
+            return BadRequest(new { Error = "An account with this email already exists." });
         }
         catch (InvalidPasswordException ex)
         {
