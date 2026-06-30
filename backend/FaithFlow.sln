@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaithFlow.Api", "FaithFlow.Api\FaithFlow.Api.csproj", "{3046F013-1D10-40A0-BBCE-19916B4AAD0E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaithFlow.Api.Tests", "FaithFlow.Api.Tests\FaithFlow.Api.Tests.csproj", "{F1231ED6-DDD8-43CA-9480-153A36C9F309}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{3046F013-1D10-40A0-BBCE-19916B4AAD0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3046F013-1D10-40A0-BBCE-19916B4AAD0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3046F013-1D10-40A0-BBCE-19916B4AAD0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1231ED6-DDD8-43CA-9480-153A36C9F309}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1231ED6-DDD8-43CA-9480-153A36C9F309}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1231ED6-DDD8-43CA-9480-153A36C9F309}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1231ED6-DDD8-43CA-9480-153A36C9F309}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

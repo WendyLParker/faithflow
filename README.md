@@ -24,6 +24,7 @@ FaithFlow is being built to make daily prayer simple, encouraging, and meaningfu
 - Entity Framework Core + SQLite (local dev)
 - Prayer and Progress Note REST endpoints
 - FluentValidation and global exception handling
+- Unit tests for prayer CRUD and user-scoped access (`FaithFlow.Api.Tests`)
 
 ### Frontend
 - Vite + React + TypeScript + Tailwind CSS
@@ -32,7 +33,8 @@ FaithFlow is being built to make daily prayer simple, encouraging, and meaningfu
 - PWA scaffold (`vite-plugin-pwa` — manifest in place; icons and offline caching still TODO)
 
 ### Tooling
-- GitHub Actions CI — lint + build on push and pull requests to `main`
+- GitHub Actions CI — lint, build, and tests on push and pull requests to `main`
+- xUnit + EF Core InMemory tests for `PrayerService`
 
 ## 🚧 Coming soon
 
@@ -60,11 +62,12 @@ FaithFlow is being built to make daily prayer simple, encouraging, and meaningfu
 
 ```bash
 faithflow/
-├── frontend/          # React + Vite PWA
-├── backend/           # .NET 8 Web API
-│   └── FaithFlow.Api/
-├── docs/              # Architecture notes
-└── .github/workflows/ # CI
+├── frontend/               # React + Vite PWA
+├── backend/                # .NET 8 Web API
+│   ├── FaithFlow.Api/
+│   └── FaithFlow.Api.Tests/  # xUnit tests
+├── docs/                   # Architecture notes
+└── .github/workflows/      # CI
 ```
 
 ## 🚀 Quick start
@@ -115,8 +118,9 @@ The SQLite database (`faithflow.db`) is created automatically on first run via E
 - `npm run lint` — Run ESLint
 
 ### Backend
-- `dotnet watch run` — Run with hot reload
-- `dotnet build` — Compile the API
+- `dotnet watch run` — Run API with hot reload (from `FaithFlow.Api/`)
+- `dotnet build` — Compile the solution
+- `dotnet test` — Run unit tests (from `backend/`)
 
 ## 🏗 Project phases
 
