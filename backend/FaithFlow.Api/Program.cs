@@ -3,8 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using FaithFlow.Backend.Interfaces;
 using FaithFlow.Backend.Services;
-using FaithFlow.Backend.Data;
-using Microsoft.EntityFrameworkCore;
+using FaithFlow.Backend.Extensions;
 using FaithFlow.Backend.Common;
 using FluentValidation;
 using FaithFlow.Backend.DTOs.Validators;
@@ -20,12 +19,12 @@ builder.Services.AddControllers(options =>
 });
 builder.Services.AddScoped<ValidationFilter>();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHealthChecks();
 
 // Register services
 builder.Services.AddScoped<IProgressNoteRepository, ProgressNoteService>();
 builder.Services.AddScoped<IPrayerRepository, PrayerService>();
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddFaithFlowDatabase(builder.Configuration);
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<PrayerCreateDtoValidator>();
@@ -93,7 +92,6 @@ builder.Services.AddSingleton<IAmazonCognitoIdentityProvider>(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<CognitoSettings>>().Value;
 
-    // Use default credential chain + explicit profile if needed
     return new AmazonCognitoIdentityProviderClient(
         RegionEndpoint.GetBySystemName(settings.Region)
     );
@@ -102,17 +100,32 @@ builder.Services.AddSingleton<IAmazonCognitoIdentityProvider>(sp =>
 builder.Services.AddAuthorization();
 
 // ====================== CORS ======================
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        if (allowedOrigins.Length > 0)
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+        else if (builder.Environment.IsDevelopment())
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
     });
 });
 
 var app = builder.Build();
+
+app.ApplyFaithFlowMigrations();
 
 // ====================== Middleware ======================
 if (app.Environment.IsDevelopment())
@@ -126,10 +139,6 @@ if (app.Environment.IsDevelopment())
         c.InjectStylesheet("/swagger-ui/custom.css");
     });
 }
-else
-{
-    app.UseHttpsRedirection();
-}
 
 app.UseCors("AllowFrontend");
 app.UseMiddleware<ApiExceptionMiddleware>();
@@ -138,5 +147,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

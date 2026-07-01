@@ -1,0 +1,130 @@
+# Deploy FaithFlow API to AWS App Runner
+
+The backend runs as a .NET 8 container on **App Runner**, with **RDS PostgreSQL** for production data. The frontend stays on **Amplify**.
+
+```
+Amplify (React)  →  App Runner (.NET API)  →  RDS PostgreSQL
+                         ↓
+                    Cognito (auth)
+```
+
+## Prerequisites
+
+- AWS CLI configured (`aws configure`)
+- Docker installed locally
+- An RDS PostgreSQL instance (or create one — `db.t4g.micro` is fine for demos)
+- Your Amplify frontend URL (for CORS)
+
+## 1. Create RDS PostgreSQL
+
+In the AWS Console (or CLI), create a PostgreSQL database. Note:
+
+- Engine: PostgreSQL 15+
+- Database name: e.g. `faithflow`
+- Master username / password
+- **Public access** (simplest for first deploy) or VPC connector for App Runner (more secure)
+
+Connection string format:
+
+```
+Host=your-db.xxxxx.us-east-1.rds.amazonaws.com;Port=5432;Database=faithflow;Username=faithflow;Password=YOUR_PASSWORD;SSL Mode=Require;Trust Server Certificate=true
+```
+
+## 2. Build and push the Docker image
+
+From the repo root:
+
+```bash
+cd backend/FaithFlow.Api
+
+# Create ECR repository (once)
+aws ecr create-repository --repository-name faithflow-api --region us-east-1
+
+# Log in to ECR
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+aws ecr get-login-password --region us-east-1 | \
+  docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com
+
+# Build and push
+docker build -t faithflow-api .
+docker tag faithflow-api:latest ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/faithflow-api:latest
+docker push ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/faithflow-api:latest
+```
+
+## 3. Create the App Runner service
+
+AWS Console → **App Runner** → Create service:
+
+| Setting | Value |
+|---------|-------|
+| Source | Container registry → Amazon ECR |
+| Image | `faithflow-api:latest` |
+| Port | `8080` |
+| Health check path | `/health` |
+
+### Environment variables
+
+Set these on the App Runner service (use your real values):
+
+| Variable | Example |
+|----------|---------|
+| `ASPNETCORE_ENVIRONMENT` | `Production` |
+| `Database__Provider` | `Postgres` |
+| `ConnectionStrings__DefaultConnection` | *(RDS connection string from step 1)* |
+| `Cognito__Authority` | `https://cognito-idp.us-east-1.amazonaws.com/us-east-1_xxxxx` |
+| `Cognito__UserPoolId` | `us-east-1_xxxxx` |
+| `Cognito__ClientId` | `your-app-client-id` |
+| `Cognito__Region` | `us-east-1` |
+| `Cors__AllowedOrigins__0` | `https://main.xxxxx.amplifyapp.com` |
+
+The API applies EF Core migrations automatically on startup when `Database__Provider=Postgres`.
+
+App Runner assigns a URL like `https://xxxxx.us-east-1.awsapprunner.com`.
+
+## 4. Connect the Amplify frontend
+
+In **Amplify → Environment variables**:
+
+```
+VITE_API_BASE_URL=https://xxxxx.us-east-1.awsapprunner.com
+```
+
+Redeploy the frontend so the build picks up the new URL.
+
+## 5. Update Cognito (if needed)
+
+If you use hosted UI or callback URLs, add your Amplify domain to the Cognito app client settings.
+
+## Local development
+
+Local dev still uses **SQLite** (no Docker required):
+
+```bash
+cd backend/FaithFlow.Api
+dotnet run
+```
+
+`Database:Provider` defaults to `Sqlite` in `appsettings.json`. The schema is created via `EnsureCreated()` in Development.
+
+If you had an older `faithflow.db` from previous migrations, delete it and restart so the schema is recreated.
+
+### Optional: local PostgreSQL via Docker
+
+```bash
+docker run --name faithflow-db -e POSTGRES_USER=faithflow -e POSTGRES_PASSWORD=faithflow \
+  -e POSTGRES_DB=faithflow -p 5432:5432 -d postgres:16
+
+cd backend/FaithFlow.Api
+Database__Provider=Postgres \
+ConnectionStrings__DefaultConnection="Host=localhost;Port=5432;Database=faithflow;Username=faithflow;Password=faithflow" \
+dotnet run
+```
+
+## Troubleshooting
+
+| Issue | Fix |
+|-------|-----|
+| Build fails connecting to RDS | Check security group allows App Runner / your IP on port 5432 |
+| CORS errors in browser | Set `Cors__AllowedOrigins__0` to your exact Amplify URL (no trailing slash) |
+| 502 from App Runner | Check logs; confirm port `8080` and `/health` returns 200 |
+| Auth works locally but not prod | Verify Cognito env vars match your user pool |

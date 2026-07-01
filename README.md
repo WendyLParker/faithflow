@@ -53,9 +53,9 @@ FaithFlow is being built to make daily prayer simple, encouraging, and meaningfu
 | **Frontend** | Vite, React, TypeScript, Tailwind CSS, TanStack Query | PWA polish, Recharts |
 | **Backend** | .NET 8 Web API, EF Core, SQLite | OpenAI chat proxy endpoint |
 | **Auth** | AWS Cognito | — |
-| **Hosting** | Local dev | AWS Amplify |
+| **Hosting** | Local dev | AWS Amplify (frontend), App Runner (API) |
 | **Storage** | — | AWS S3 (voice notes & images) |
-| **Database** | SQLite (dev) | Amazon RDS or DynamoDB |
+| **Database** | SQLite (dev) | Amazon RDS PostgreSQL (production) |
 | **AI** | — | OpenAI API (`gpt-4o-mini`, server-side) |
 
 ## 📁 Project structure
@@ -108,7 +108,7 @@ dotnet run
 
 Configure Cognito settings in `appsettings.Development.json` before using auth endpoints.
 
-The SQLite database (`faithflow.db`) is created automatically on first run via EF Core migrations.
+The SQLite database (`faithflow.db`) is created automatically on first run in Development. For production deployment (App Runner + RDS PostgreSQL), see [docs/deploy-backend.md](docs/deploy-backend.md).
 
 ## 📋 Available scripts
 
@@ -129,7 +129,7 @@ The SQLite database (`faithflow.db`) is created automatically on first run via E
 - [ ] **Phase 3:** AI integration *(OpenAI — prayer prompts & encouragement chat)*
 - [ ] **Phase 4:** Frontend UI *(in progress — auth + prayer flows done; progress notes & AI tab pending)*
 - [ ] **Phase 5:** Polish & faith features *(streaks, charts, daily verse, celebrations)*
-- [ ] **Phase 6:** Deploy to AWS Amplify *(amplify.yml started; not live yet)*
+- [ ] **Phase 6:** Deploy to AWS *(frontend on Amplify; backend on App Runner — see [docs/deploy-backend.md](docs/deploy-backend.md))*
 
 See [docs/architecture.md](docs/architecture.md) for the full system design.
 
