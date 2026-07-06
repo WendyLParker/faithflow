@@ -10,9 +10,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'FaithFlow',
-        short_name: 'FaithFlow',
-        description: 'Build consistent prayer habits',
+        name: 'Request Manager',
+        short_name: 'Requests',
+        description: 'Submit, track, and manage team requests',
         theme_color: '#4f46e5',
         background_color: '#ffffff',
         display: 'standalone',

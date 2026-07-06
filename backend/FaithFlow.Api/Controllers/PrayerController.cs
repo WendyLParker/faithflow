@@ -26,28 +26,29 @@ public class PrayerController : ControllerBase
             ?? "unknown-user";
     }
 
+    private static PrayerResponseDto ToDto(Prayer prayer) => new()
+    {
+        Id = prayer.Id,
+        Title = prayer.Title,
+        Content = prayer.Content,
+        PrayerDate = prayer.PrayerDate,
+        IsAnswered = prayer.IsAnswered,
+        AnsweredDate = prayer.AnsweredDate,
+        Categories = prayer.Categories,
+        RequestTypeId = prayer.RequestTypeId,
+        RequestTypeName = prayer.RequestType?.Name ?? string.Empty,
+        VoiceNoteUrl = prayer.VoiceNoteUrl,
+        ImageUrl = prayer.ImageUrl,
+        StreakDays = prayer.StreakDays,
+    };
+
     // GET: api/prayer
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PrayerResponseDto>>> GetAll()
     {
         var userId = GetCurrentUserId();
         var prayers = await _prayerService.GetAllByUserAsync(userId);
-
-        var dtos = prayers.Select(p => new PrayerResponseDto
-        {
-            Id = p.Id,
-            Title = p.Title,
-            Content = p.Content,
-            PrayerDate = p.PrayerDate,
-            IsAnswered = p.IsAnswered,
-            AnsweredDate = p.AnsweredDate,
-            Categories = p.Categories,
-            VoiceNoteUrl = p.VoiceNoteUrl,
-            ImageUrl = p.ImageUrl,
-            StreakDays = p.StreakDays
-        });
-
-        return Ok(dtos);
+        return Ok(prayers.Select(ToDto));
     }
 
     // GET: api/prayer/5
@@ -59,21 +60,7 @@ public class PrayerController : ControllerBase
 
         if (prayer == null) return NotFound();
 
-        var dto = new PrayerResponseDto
-        {
-            Id = prayer.Id,
-            Title = prayer.Title,
-            Content = prayer.Content,
-            PrayerDate = prayer.PrayerDate,
-            IsAnswered = prayer.IsAnswered,
-            AnsweredDate = prayer.AnsweredDate,
-            Categories = prayer.Categories,
-            VoiceNoteUrl = prayer.VoiceNoteUrl,
-            ImageUrl = prayer.ImageUrl,
-            StreakDays = prayer.StreakDays
-        };
-
-        return Ok(dto);
+        return Ok(ToDto(prayer));
     }
 
     // POST: api/prayer
@@ -88,22 +75,14 @@ public class PrayerController : ControllerBase
             Title = dto.Title,
             Content = dto.Content,
             Categories = dto.Categories ?? new List<string>(),
-            PrayerDate = DateTime.UtcNow
+            RequestTypeId = dto.RequestTypeId,
+            PrayerDate = DateTime.UtcNow,
         };
 
         var created = await _prayerService.AddAsync(prayer);
+        var loaded = await _prayerService.GetByIdAsync(created.Id, userId);
 
-        var response = new PrayerResponseDto
-        {
-            Id = created.Id,
-            Title = created.Title,
-            Content = created.Content,
-            PrayerDate = created.PrayerDate,
-            Categories = created.Categories,
-            IsAnswered = created.IsAnswered
-        };
-
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, ToDto(loaded!));
     }
 
     // PUT: api/prayer/5
@@ -124,18 +103,8 @@ public class PrayerController : ControllerBase
 
         await _prayerService.UpdateAsync(prayer);
 
-        var response = new PrayerResponseDto
-        {
-            Id = prayer.Id,
-            Title = prayer.Title,
-            Content = prayer.Content,
-            PrayerDate = prayer.PrayerDate,
-            IsAnswered = prayer.IsAnswered,
-            AnsweredDate = prayer.AnsweredDate,
-            Categories = prayer.Categories
-        };
-
-        return Ok(response);
+        var updated = await _prayerService.GetByIdAsync(id, userId);
+        return Ok(ToDto(updated!));
     }
 
     // DELETE: api/prayer/5

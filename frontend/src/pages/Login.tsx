@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,6 +14,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -32,6 +33,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
+    setIsError(false);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
@@ -47,13 +49,14 @@ const Login = () => {
 
       if (response.ok) {
         login(data.accessToken, data.idToken);
-
         setMessage('Login successful! Redirecting...');
         setTimeout(() => navigate('/dashboard'), 1000);
       } else {
+        setIsError(true);
         setMessage(data.error || 'Login failed');
       }
     } catch {
+      setIsError(true);
       setMessage('Network error. Please try again.');
     } finally {
       setLoading(false);
@@ -61,50 +64,74 @@ const Login = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+    <div className="page-container max-w-md">
+      <h1 className="page-title text-center">Sign In</h1>
+      <p className="page-subtitle text-center">Access your request manager account.</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="email"
-          name="email"
-          placeholder="Email address"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          autoComplete="email"
-          className="w-full p-3 border rounded-lg"
-        />
-
-        <div className="relative">
+        <div>
+          <label htmlFor="email" className="form-label">
+            Email
+          </label>
           <input
-            type={showPassword ? "text" : "password"}
-            name="password"
-            placeholder="Password"
-            value={formData.password}
+            id="email"
+            type="email"
+            name="email"
+            placeholder="Email address"
+            value={formData.email}
             onChange={handleChange}
             required
-            className="w-full p-3 border rounded-lg pr-10"
+            autoComplete="email"
+            className="form-input"
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-          >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-          </button>
+        </div>
+
+        <div>
+          <label htmlFor="password" className="form-label">
+            Password
+          </label>
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="form-input pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          className="btn-apple w-full py-3.5 rounded-xl font-semibold disabled:opacity-50"
         >
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
 
-      {message && <p className="mt-4 text-center">{message}</p>}
+      {message && (
+        <p className={`mt-4 text-center ${isError ? 'message-error' : 'message-success'}`}>
+          {message}
+        </p>
+      )}
+
+      <p className="mt-6 text-center text-sm text-neutral-400">
+        No account?{' '}
+        <Link to="/register" className="link-accent">
+          Register
+        </Link>
+      </p>
     </div>
   );
 };

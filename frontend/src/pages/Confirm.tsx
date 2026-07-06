@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
 
 const Confirm = () => {
@@ -10,12 +10,14 @@ const Confirm = () => {
   const [confirmationCode, setConfirmationCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
+    setIsSuccess(false);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/confirm`, {
@@ -30,7 +32,8 @@ const Confirm = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage('Account confirmed! Redirecting to login...');
+        setIsSuccess(true);
+        setMessage('Account confirmed! Redirecting to sign in...');
         setTimeout(() => navigate('/login'), 1500);
       } else {
         setMessage(data.error || 'Confirmation failed');
@@ -43,42 +46,65 @@ const Confirm = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center">Confirm Your Account</h2>
+    <div className="page-container max-w-md">
+      <h1 className="page-title text-center">Confirm Account</h1>
+      <p className="page-subtitle text-center">Enter the code sent to your email.</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="email"
-          name="email"
-          placeholder="Email address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          autoComplete="email"
-          className="w-full p-3 border rounded-lg"
-        />
+        <div>
+          <label htmlFor="email" className="form-label">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            name="email"
+            placeholder="Email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            className="form-input"
+          />
+        </div>
 
-        <input
-          type="text"
-          name="confirmationCode"
-          placeholder="Confirmation code"
-          value={confirmationCode}
-          onChange={(e) => setConfirmationCode(e.target.value)}
-          required
-          autoComplete="one-time-code"
-          className="w-full p-3 border rounded-lg"
-        />
+        <div>
+          <label htmlFor="confirmationCode" className="form-label">
+            Confirmation code
+          </label>
+          <input
+            id="confirmationCode"
+            type="text"
+            name="confirmationCode"
+            placeholder="Confirmation code"
+            value={confirmationCode}
+            onChange={(e) => setConfirmationCode(e.target.value)}
+            required
+            autoComplete="one-time-code"
+            className="form-input"
+          />
+        </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
+          className="btn-apple w-full py-3.5 rounded-xl font-semibold disabled:opacity-50"
         >
           {loading ? 'Confirming...' : 'Confirm Account'}
         </button>
       </form>
 
-      {message && <p className="mt-4 text-center text-green-600">{message}</p>}
+      {message && (
+        <p className={`mt-4 text-center ${isSuccess ? 'message-success' : 'message-error'}`}>
+          {message}
+        </p>
+      )}
+
+      <p className="mt-6 text-center text-sm text-neutral-400">
+        <Link to="/login" className="link-accent">
+          Back to sign in
+        </Link>
+      </p>
     </div>
   );
 };

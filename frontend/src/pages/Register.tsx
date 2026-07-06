@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
 
 const Register = () => {
@@ -9,6 +9,7 @@ const Register = () => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,6 +23,7 @@ const Register = () => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
+    setIsSuccess(false);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
@@ -33,6 +35,7 @@ const Register = () => {
       const data = await response.json();
 
       if (response.ok) {
+        setIsSuccess(true);
         setMessage('Registration successful! Check your email for the confirmation code.');
         setTimeout(() => navigate('/confirm', { state: { email: formData.email } }), 2000);
       } else {
@@ -46,46 +49,66 @@ const Register = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center">Create Account</h2>
+    <div className="page-container max-w-md">
+      <h1 className="page-title text-center">Create Account</h1>
+      <p className="page-subtitle text-center">Register to submit and track requests.</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="email"
-          name="email"
-          placeholder="Email address"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          autoComplete="email"
-          className="w-full p-3 border rounded-lg"
-        />
+        <div>
+          <label htmlFor="email" className="form-label">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            name="email"
+            placeholder="Email address"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            autoComplete="email"
+            className="form-input"
+          />
+        </div>
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          autoComplete="new-password"
-          className="w-full p-3 border rounded-lg"
-        />
+        <div>
+          <label htmlFor="password" className="form-label">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            autoComplete="new-password"
+            className="form-input"
+          />
+        </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          className="btn-apple w-full py-3.5 rounded-xl font-semibold disabled:opacity-50"
         >
           {loading ? 'Creating Account...' : 'Register'}
         </button>
       </form>
 
       {message && (
-        <p className={`mt-4 text-center ${message.includes('successful') ? 'text-green-600' : 'text-red-600'}`}>
+        <p className={`mt-4 text-center ${isSuccess ? 'message-success' : 'message-error'}`}>
           {message}
         </p>
       )}
+
+      <p className="mt-6 text-center text-sm text-neutral-400">
+        Already have an account?{' '}
+        <Link to="/login" className="link-accent">
+          Sign in
+        </Link>
+      </p>
     </div>
   );
 };

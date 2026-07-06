@@ -25,6 +25,7 @@ public class PrayerService : IPrayerRepository
     {
         return await _context.Prayers
             .Include(p => p.ProgressNotes)
+            .Include(p => p.RequestType)
             .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
     }
 
@@ -32,6 +33,7 @@ public class PrayerService : IPrayerRepository
     {
         return await _context.Prayers
             .Include(p => p.ProgressNotes)
+            .Include(p => p.RequestType)
             .Where(p => p.UserId == userId)
             .OrderByDescending(p => p.PrayerDate)
             .ToListAsync();

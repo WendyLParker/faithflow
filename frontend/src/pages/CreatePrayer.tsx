@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { useCreatePrayer } from '@/hooks/usePrayers';
+import { useRequestTypes } from '@/hooks/useRequestTypes';
 
 const PRESET_CATEGORIES = [
   'Health',
@@ -16,10 +17,12 @@ const PRESET_CATEGORIES = [
 export default function CreatePrayer() {
   const navigate = useNavigate();
   const createPrayer = useCreatePrayer();
+  const { data: requestTypes = [], isLoading: typesLoading } = useRequestTypes();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [categories, setCategories] = useState<string[]>([]);
+  const [requestTypeId, setRequestTypeId] = useState<number | null>(null);
 
   const toggleCategory = (cat: string) => {
     setCategories((prev) =>
@@ -29,34 +32,56 @@ export default function CreatePrayer() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (requestTypeId == null) return;
 
     try {
-      const created = await createPrayer.mutateAsync({
+      await createPrayer.mutateAsync({
         title: title.trim(),
         content: content.trim() || undefined,
         categories,
+        requestTypeId,
       });
-      navigate(`/prayers/${created.id}`);
+      navigate('/prayers');
     } catch {
       // error shown below
     }
   };
 
-  return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-1 text-gray-500 hover:text-gray-700 mb-4 text-sm"
-      >
-        <ArrowLeft size={18} />
-        Back
-      </button>
+  const canSubmit = title.trim().length > 0 && requestTypeId != null && !createPrayer.isPending;
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">New Prayer Request</h1>
+  return (
+    <div className="page-container">
+      <Link to="/dashboard" className="back-link">
+        <ArrowLeft size={16} />
+        Back to dashboard
+      </Link>
+      <h1 className="page-title">Create Request</h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1.5">
+          <p className="form-label mb-2">Request type</p>
+          {typesLoading ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="animate-spin text-[#34C759]" size={24} />
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {requestTypes.map((type) => (
+                <button
+                  key={type.id}
+                  type="button"
+                  onClick={() => setRequestTypeId(type.id)}
+                  className={requestTypeId === type.id ? 'chip chip-selected' : 'chip'}
+                >
+                  {type.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="title" className="form-label">
             Title
           </label>
           <input
@@ -64,16 +89,16 @@ export default function CreatePrayer() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="What are you praying for?"
+            placeholder="Brief summary of your request"
             required
             maxLength={200}
-            className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="form-input"
           />
         </div>
 
         <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1.5">
-            Details <span className="text-gray-400 font-normal">(optional)</span>
+          <label htmlFor="content" className="form-label">
+            Details <span className="text-neutral-500 font-normal">(optional)</span>
           </label>
           <textarea
             id="content"
@@ -82,23 +107,19 @@ export default function CreatePrayer() {
             placeholder="Share more about your request..."
             rows={5}
             maxLength={2000}
-            className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+            className="form-input resize-none"
           />
         </div>
 
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Categories</p>
+          <p className="form-label mb-2">Categories</p>
           <div className="flex flex-wrap gap-2">
             {PRESET_CATEGORIES.map((cat) => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => toggleCategory(cat)}
-                className={`text-sm px-3 py-1.5 rounded-full border transition ${
-                  categories.includes(cat)
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
-                }`}
+                className={categories.includes(cat) ? 'chip chip-selected' : 'chip'}
               >
                 {cat}
               </button>
@@ -107,13 +128,13 @@ export default function CreatePrayer() {
         </div>
 
         {createPrayer.isError && (
-          <p className="text-red-600 text-sm">Failed to create prayer request. Please try again.</p>
+          <p className="message-error">Failed to create request. Please try again.</p>
         )}
 
         <button
           type="submit"
-          disabled={createPrayer.isPending || !title.trim()}
-          className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          disabled={!canSubmit}
+          className="btn-apple w-full py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2"
         >
           {createPrayer.isPending ? (
             <>

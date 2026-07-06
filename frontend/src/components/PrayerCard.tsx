@@ -13,14 +13,14 @@ export default function PrayerCard({ prayer }: PrayerCardProps) {
   return (
     <Link
       to={`/prayers/${prayer.id}`}
-      className="block bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:border-indigo-200 hover:shadow-md transition"
+      className="block content-card-sm hover:border-neutral-500 transition"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-gray-900 truncate">{prayer.title}</h3>
+            <h3 className="font-semibold text-neutral-100 truncate">{prayer.title}</h3>
             {prayer.isAnswered && (
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full shrink-0">
+              <span className="badge-success shrink-0">
                 <Sparkles size={12} />
                 Answered
               </span>
@@ -28,23 +28,23 @@ export default function PrayerCard({ prayer }: PrayerCardProps) {
           </div>
 
           {prayer.content && (
-            <p className="text-gray-600 text-sm mt-1 line-clamp-2">{prayer.content}</p>
+            <p className="text-neutral-400 text-sm mt-1 line-clamp-2">{prayer.content}</p>
           )}
 
           <div className="flex flex-wrap items-center gap-2 mt-3">
-            <span className="text-xs text-gray-400">{timeAgo}</span>
+            <span className="text-xs text-neutral-500">{timeAgo}</span>
+            {prayer.requestTypeName && (
+              <span className="badge">{prayer.requestTypeName}</span>
+            )}
             {prayer.categories.map((cat) => (
-              <span
-                key={cat}
-                className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full"
-              >
+              <span key={cat} className="badge">
                 {cat}
               </span>
             ))}
           </div>
         </div>
 
-        <ChevronRight size={20} className="text-gray-300 shrink-0 mt-1" />
+        <ChevronRight size={20} className="text-neutral-600 shrink-0 mt-1" />
       </div>
     </Link>
   );
