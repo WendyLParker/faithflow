@@ -19,6 +19,7 @@ public class PrayerServiceTests
             Title = "Healing for mom",
             Content = "Please restore her strength.",
             Categories = new List<string> { "Health", "Family" },
+            RequestTypeId = 2,
         };
 
         var created = await service.AddAsync(prayer);
@@ -41,6 +42,7 @@ public class PrayerServiceTests
         {
             UserId = UserA,
             Title = "Job interview",
+            RequestTypeId = 2,
         });
 
         var result = await service.GetByIdAsync(created.Id, UserA);
@@ -60,6 +62,7 @@ public class PrayerServiceTests
         {
             UserId = UserA,
             Title = "Private request",
+            RequestTypeId = 2,
         });
 
         var result = await service.GetByIdAsync(created.Id, UserB);
@@ -78,18 +81,21 @@ public class PrayerServiceTests
             UserId = UserA,
             Title = "Older request",
             PrayerDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            RequestTypeId = 2,
         });
         await service.AddAsync(new Prayer
         {
             UserId = UserA,
             Title = "Newer request",
             PrayerDate = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc),
+            RequestTypeId = 2,
         });
         await service.AddAsync(new Prayer
         {
             UserId = UserB,
             Title = "Someone else's request",
             PrayerDate = new DateTime(2026, 6, 2, 0, 0, 0, DateTimeKind.Utc),
+            RequestTypeId = 2,
         });
 
         var results = (await service.GetAllByUserAsync(UserA)).ToList();
@@ -111,6 +117,7 @@ public class PrayerServiceTests
             UserId = UserA,
             Title = "Original title",
             IsAnswered = false,
+            RequestTypeId = 2,
         });
 
         created.Title = "Updated title";
@@ -137,6 +144,7 @@ public class PrayerServiceTests
         {
             UserId = UserA,
             Title = "Temporary request",
+            RequestTypeId = 2,
         });
 
         var deleted = await service.DeleteAsync(created.Id, UserA);
@@ -166,6 +174,7 @@ public class PrayerServiceTests
         {
             UserId = UserA,
             Title = "Not yours to delete",
+            RequestTypeId = 2,
         });
 
         var deleted = await service.DeleteAsync(created.Id, UserB);

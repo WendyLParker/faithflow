@@ -24,6 +24,9 @@ namespace FaithFlow.Backend.Models
 
         public List<string> Categories { get; set; } = new();
 
+        public int RequestTypeId { get; set; }
+        public RequestType RequestType { get; set; } = null!;
+
         // Optional attachments (S3 URLs)
         public string? VoiceNoteUrl { get; set; }
         public string? ImageUrl { get; set; }

@@ -1,9 +1,15 @@
 import api from '@/lib/api';
 
+export interface RequestTypeDto {
+  id: number;
+  name: string;
+}
+
 export interface PrayerCreateDto {
   title: string;
   content?: string;
   categories: string[];
+  requestTypeId: number;
 }
 
 export interface PrayerUpdateDto {
@@ -19,8 +25,17 @@ export interface PrayerResponseDto {
   isAnswered: boolean;
   answeredDate?: string;
   categories: string[];
+  requestTypeId: number;
+  requestTypeName: string;
   streakDays?: number;
 }
+
+export const requestTypeService = {
+  async getAll() {
+    const response = await api.get<RequestTypeDto[]>('/api/requesttype');
+    return response.data;
+  },
+};
 
 export const prayerService = {
   async getAll() {

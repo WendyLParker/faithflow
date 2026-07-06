@@ -1,13 +1,7 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import {
-  ArrowLeft,
-  Loader2,
-  Sparkles,
-  Trash2,
-  CheckCircle,
-} from 'lucide-react';
+import { ArrowLeft, Loader2, Sparkles, Trash2, CheckCircle } from 'lucide-react';
 import {
   usePrayer,
   useMarkPrayerAnswered,
@@ -44,46 +38,38 @@ export default function PrayerDetail() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-24">
-        <Loader2 className="animate-spin text-indigo-600" size={32} />
+        <Loader2 className="animate-spin text-[#34C759]" size={32} />
       </div>
     );
   }
 
   if (error || !prayer) {
     return (
-      <div className="p-4 max-w-2xl mx-auto">
-        <button
-          onClick={() => navigate('/prayers')}
-          className="flex items-center gap-1 text-gray-500 hover:text-gray-700 mb-4 text-sm"
-        >
-          <ArrowLeft size={18} />
+      <div className="page-container">
+        <Link to="/prayers" className="back-link">
+          <ArrowLeft size={16} />
           Back to requests
-        </button>
-        <div className="bg-red-50 text-red-700 p-4 rounded-xl text-sm">
-          Prayer request not found.
-        </div>
+        </Link>
+        <div className="alert-error">Request not found.</div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <button
-        onClick={() => navigate('/prayers')}
-        className="flex items-center gap-1 text-gray-500 hover:text-gray-700 mb-4 text-sm"
-      >
-        <ArrowLeft size={18} />
+    <div className="page-container">
+      <Link to="/prayers" className="back-link">
+        <ArrowLeft size={16} />
         Back to requests
-      </button>
+      </Link>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="content-card">
         {prayer.isAnswered && (
-          <div className="flex items-center gap-2 bg-green-50 text-green-800 px-4 py-3 rounded-xl mb-5">
-            <Sparkles size={20} />
+          <div className="flex items-center gap-2 alert-info mb-5">
+            <Sparkles size={20} className="text-[#9bada3] shrink-0" />
             <div>
-              <p className="font-medium">Praise Report</p>
+              <p className="font-medium text-neutral-100">Completed</p>
               {prayer.answeredDate && (
-                <p className="text-sm text-green-700">
+                <p className="text-sm text-neutral-400">
                   Answered on {format(new Date(prayer.answeredDate), 'MMMM d, yyyy')}
                 </p>
               )}
@@ -91,19 +77,22 @@ export default function PrayerDetail() {
           </div>
         )}
 
-        <h1 className="text-2xl font-bold text-gray-900">{prayer.title}</h1>
+        <h1 className="text-2xl font-bold text-white">{prayer.title}</h1>
 
-        <p className="text-sm text-gray-400 mt-2">
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          {prayer.requestTypeName && (
+            <span className="badge">{prayer.requestTypeName}</span>
+          )}
+        </div>
+
+        <p className="text-sm text-neutral-500 mt-2">
           Posted {format(new Date(prayer.prayerDate), 'MMMM d, yyyy')}
         </p>
 
         {prayer.categories.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">
             {prayer.categories.map((cat) => (
-              <span
-                key={cat}
-                className="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full"
-              >
+              <span key={cat} className="badge">
                 {cat}
               </span>
             ))}
@@ -111,7 +100,7 @@ export default function PrayerDetail() {
         )}
 
         {prayer.content && (
-          <p className="text-gray-700 mt-5 leading-relaxed whitespace-pre-wrap">
+          <p className="text-neutral-300 mt-5 leading-relaxed whitespace-pre-wrap">
             {prayer.content}
           </p>
         )}
@@ -122,7 +111,7 @@ export default function PrayerDetail() {
           <button
             onClick={handleMarkAnswered}
             disabled={markAnswered.isPending}
-            className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 disabled:opacity-50 transition"
+            className="btn-apple w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold disabled:opacity-50"
           >
             {markAnswered.isPending ? (
               <Loader2 size={20} className="animate-spin" />
@@ -134,35 +123,31 @@ export default function PrayerDetail() {
         )}
 
         {markAnswered.isError && (
-          <p className="text-red-600 text-sm text-center">
-            Failed to mark as answered. Please try again.
-          </p>
+          <p className="message-error text-center">Failed to mark as answered. Please try again.</p>
         )}
 
         {!showDeleteConfirm ? (
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="w-full flex items-center justify-center gap-2 text-red-600 py-3 rounded-xl font-medium hover:bg-red-50 transition"
+            className="w-full flex items-center justify-center gap-2 text-red-400 py-3 rounded-xl font-medium border border-red-900/50 hover:bg-red-950/30 transition"
           >
             <Trash2 size={18} />
             Delete Request
           </button>
         ) : (
-          <div className="bg-red-50 rounded-xl p-4 space-y-3">
-            <p className="text-sm text-red-800 text-center">
-              Are you sure? This cannot be undone.
-            </p>
+          <div className="alert-error space-y-3">
+            <p className="text-center">Are you sure? This cannot be undone.</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-2 text-sm font-medium text-gray-600 bg-white rounded-lg border border-gray-200"
+                className="filter-btn flex-1"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deletePrayer.isPending}
-                className="flex-1 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                className="flex-1 py-2 text-sm font-medium text-white bg-red-700 rounded-lg hover:bg-red-600 disabled:opacity-50 border border-red-600"
               >
                 {deletePrayer.isPending ? 'Deleting...' : 'Delete'}
               </button>

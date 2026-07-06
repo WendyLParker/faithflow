@@ -1,5 +1,21 @@
-import { Plus, Home, List, Bot, Flame, LogOut } from 'lucide-react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import {
+  Plus,
+  Home,
+  List,
+  LogOut,
+  Search,
+  LifeBuoy,
+  Bell,
+  User,
+} from 'lucide-react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+} from 'react-router-dom';
 
 import Register from './pages/Register';
 import Confirm from './pages/Confirm';
@@ -8,48 +24,180 @@ import { ProtectedDashboard } from './pages/Dashboard';
 import PrayerList from './pages/PrayerList';
 import CreatePrayer from './pages/CreatePrayer';
 import PrayerDetail from './pages/PrayerDetail';
+import Departments from './pages/Departments';
+import SearchRequests from './pages/SearchRequests';
+import FAQ from './pages/FAQ';
 import ProtectedRoute from './components/ProtectedRoute';
 import RootRedirect from './components/RootRedirect';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 
+type NavItem = {
+  path: string;
+  label: string;
+  icon: typeof Home;
+  match: (pathname: string) => boolean;
+};
+
+const loggedOutNav: NavItem[] = [
+  {
+    path: '/login',
+    label: 'Home',
+    icon: Home,
+    match: (p) => p === '/login' || p === '/register' || p === '/confirm',
+  },
+];
+
+const loggedInNav: NavItem[] = [
+  {
+    path: '/dashboard',
+    label: 'Home',
+    icon: Home,
+    match: (p) => p === '/dashboard',
+  },
+  {
+    path: '/prayers',
+    label: 'Requests',
+    icon: List,
+    match: (p) => p.startsWith('/prayers'),
+  },
+  {
+    path: '/add',
+    label: 'New',
+    icon: Plus,
+    match: (p) => p === '/add',
+  },
+  {
+    path: '/search',
+    label: 'Search',
+    icon: Search,
+    match: (p) => p === '/search',
+  },
+  {
+    path: '/faq',
+    label: 'FAQ',
+    icon: LifeBuoy,
+    match: (p) => p === '/faq' || p === '/departments',
+  },
+];
+
+function BottomNavItem({
+  item,
+  active,
+  onClick,
+}: {
+  item: NavItem;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const Icon = item.icon;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-current={active ? 'page' : undefined}
+      className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[3.25rem] transition-colors ${
+        active ? 'text-white' : 'text-neutral-500 active:text-neutral-300'
+      }`}
+    >
+      <Icon size={22} strokeWidth={active ? 2.5 : 1.75} aria-hidden />
+      <span className={`text-[10px] leading-none ${active ? 'font-semibold' : 'font-normal'}`}>
+        {item.label}
+      </span>
+    </button>
+  );
+}
+
 function AppContent() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoggedIn, logout } = useAuth();
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const handleLogout = () => {
+    setProfileOpen(false);
     logout();
     navigate('/login');
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-5 shadow-md">
-        <div className="flex items-center justify-between">
-          <div
-            className="flex items-center gap-3 cursor-pointer"
-            onClick={() => navigate(isLoggedIn ? '/dashboard' : '/login')}
-          >
-            <Flame className="w-8 h-8" />
-            <h1 className="text-3xl font-bold tracking-tight">FaithFlow</h1>
-          </div>
+  const navItems = isLoggedIn ? loggedInNav : loggedOutNav;
+  const showBottomNav = isLoggedIn;
 
-          {isLoggedIn && (
+  return (
+    <div className="min-h-screen w-full bg-[#1e1e1e]">
+      <header className="sticky top-0 inset-x-0 z-50 w-full bg-black border-b border-neutral-800/80 pt-[env(safe-area-inset-top,0px)]">
+        <div className="relative flex items-center justify-between h-14 px-4 w-full">
+          <button
+            type="button"
+            onClick={() => navigate(isLoggedIn ? '/dashboard' : '/login')}
+            className="min-w-0 text-left"
+          >
+            <span className="text-xl font-black tracking-tight text-white uppercase">
+              Request Manager
+            </span>
+          </button>
+
+          {isLoggedIn ? (
+            <div className="flex items-center gap-0.5 shrink-0">
+              <button
+                type="button"
+                aria-label="Notifications"
+                onClick={() => navigate('/faq')}
+                className="relative p-2.5 text-white hover:text-neutral-300 transition-colors"
+              >
+                <Bell size={22} strokeWidth={2} />
+                <span
+                  className="absolute top-2 right-2.5 w-2 h-2 bg-[#E50914] rounded-full ring-2 ring-black"
+                  aria-hidden
+                />
+              </button>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-label="Account menu"
+                  aria-expanded={profileOpen}
+                  onClick={() => setProfileOpen((open) => !open)}
+                  className="p-2.5 text-white hover:text-neutral-300 transition-colors"
+                >
+                  <User size={22} strokeWidth={2} />
+                </button>
+
+                {profileOpen && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Close account menu"
+                      className="fixed inset-0 z-40 cursor-default"
+                      onClick={() => setProfileOpen(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-1 z-50 min-w-[10rem] rounded-md bg-neutral-900 border border-neutral-700 shadow-xl overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-2 px-4 py-3 text-sm text-white hover:bg-neutral-800 transition-colors"
+                      >
+                        <LogOut size={16} />
+                        Sign out
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : (
             <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm transition"
+              type="button"
+              onClick={() => navigate('/login')}
+              className="text-sm font-semibold text-white hover:text-neutral-300 transition-colors"
             >
-              <LogOut size={18} />
-              Logout
+              Sign In
             </button>
           )}
         </div>
-
-        <p className="text-center text-indigo-100 mt-1 text-sm">
-          Grow closer to God, one prayer at a time
-        </p>
       </header>
 
-      <main className="pb-24 min-h-[calc(100vh-180px)]">
+      <main className="w-full pb-[calc(3.75rem+env(safe-area-inset-bottom,0px))] min-h-[calc(100vh-3.5rem-env(safe-area-inset-top,0px))]">
         <Routes>
           <Route path="/register" element={<Register />} />
           <Route path="/confirm" element={<Confirm />} />
@@ -79,49 +227,52 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/departments"
+            element={
+              <ProtectedRoute>
+                <Departments />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <ProtectedRoute>
+                <SearchRequests />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/faq"
+            element={
+              <ProtectedRoute>
+                <FAQ />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/" element={<RootRedirect />} />
           <Route path="*" element={<RootRedirect />} />
         </Routes>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow">
-        <div className="max-w-md mx-auto flex justify-around items-center py-1">
-          <button
-            onClick={() => navigate(isLoggedIn ? '/dashboard' : '/login')}
-            className="flex flex-col items-center py-3 px-4 text-indigo-600"
-          >
-            <Home size={26} />
-            <span className="text-[10px] mt-1">Home</span>
-          </button>
-
-          {isLoggedIn && (
-            <>
-              <button
-                onClick={() => navigate('/prayers')}
-                className="flex flex-col items-center py-3 px-4 text-gray-500"
-              >
-                <List size={26} />
-                <span className="text-[10px] mt-1">Prayer Requests</span>
-              </button>
-
-              <button
-                onClick={() => navigate('/add')}
-                className="flex flex-col items-center -mt-8 bg-indigo-600 text-white p-5 rounded-3xl shadow-2xl active:scale-95 transition"
-              >
-                <Plus size={36} strokeWidth={3} />
-              </button>
-            </>
-          )}
-
-          <button
-            onClick={() => navigate(isLoggedIn ? '/dashboard' : '/login')}
-            className="flex flex-col items-center py-3 px-4 text-gray-500"
-          >
-            <Bot size={26} />
-            <span className="text-[10px] mt-1">AI</span>
-          </button>
-        </div>
-      </nav>
+      {showBottomNav && (
+        <nav
+          aria-label="Main navigation"
+          className="fixed bottom-0 inset-x-0 z-50 w-full bg-black border-t border-neutral-800/80 pb-[env(safe-area-inset-bottom,0px)]"
+        >
+          <div className="flex w-full max-w-lg mx-auto">
+            {navItems.map((item) => (
+              <BottomNavItem
+                key={item.path}
+                item={item}
+                active={item.match(location.pathname)}
+                onClick={() => navigate(item.path)}
+              />
+            ))}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }

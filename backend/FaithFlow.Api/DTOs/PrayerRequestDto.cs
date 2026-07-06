@@ -9,6 +9,8 @@ public class PrayerResponseDto
     public bool IsAnswered { get; set; }
     public DateTime? AnsweredDate { get; set; }
     public List<string> Categories { get; set; } = new();
+    public int RequestTypeId { get; set; }
+    public string RequestTypeName { get; set; } = string.Empty;
     public string? VoiceNoteUrl { get; set; }
     public string? ImageUrl { get; set; }
     public int StreakDays { get; set; }
