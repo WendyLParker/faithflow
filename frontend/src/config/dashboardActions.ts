@@ -56,14 +56,6 @@ export const dashboardActions: DashboardAction[] = [
     tone: 'sage',
   },
   {
-    id: 'ask',
-    title: 'View FAQs',
-    description: 'Get answers to frequently asked questions.',
-    to: '/faq',
-    icon: MessageCircle,
-    tone: 'sand',
-  },
-  {
     id: 'search',
     title: 'Search Requests',
     description: 'Find requests by title, category, or keyword.',
@@ -71,4 +63,12 @@ export const dashboardActions: DashboardAction[] = [
     icon: Search,
     tone: 'mist',
   },
+  {
+    id: 'ask',
+    title: 'View FAQs',
+    description: 'Get answers to frequently asked questions.',
+    to: '/faq',
+    icon: MessageCircle,
+    tone: 'sand',
+  }
 ];

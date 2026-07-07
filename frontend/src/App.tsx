@@ -8,6 +8,7 @@ import {
   LifeBuoy,
   Bell,
   User,
+  Building2,
 } from 'lucide-react';
 import {
   BrowserRouter as Router,
@@ -25,11 +26,14 @@ import PrayerList from './pages/PrayerList';
 import CreatePrayer from './pages/CreatePrayer';
 import PrayerDetail from './pages/PrayerDetail';
 import Departments from './pages/Departments';
+import DepartmentManagement from './pages/DepartmentManagement';
 import SearchRequests from './pages/SearchRequests';
 import FAQ from './pages/FAQ';
 import ProtectedRoute from './components/ProtectedRoute';
 import RootRedirect from './components/RootRedirect';
+import NotificationPanel from './components/NotificationPanel';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import { useUnreadCount } from './hooks/useNotifications';
 
 type NavItem = {
   path: string;
@@ -76,7 +80,7 @@ const loggedInNav: NavItem[] = [
     path: '/faq',
     label: 'FAQ',
     icon: LifeBuoy,
-    match: (p) => p === '/faq' || p === '/departments',
+    match: (p) => p === '/faq' || p === '/departments' || p === '/department-management',
   },
 ];
 
@@ -113,6 +117,10 @@ function AppContent() {
   const location = useLocation();
   const { isLoggedIn, logout } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+
+  const { data: unreadCount = 0 } = useUnreadCount();
+  const hasUnread = isLoggedIn && unreadCount > 0;
 
   const handleLogout = () => {
     setProfileOpen(false);
@@ -139,19 +147,25 @@ function AppContent() {
 
           {isLoggedIn ? (
             <div className="flex items-center gap-0.5 shrink-0">
+              {/* Notification bell */}
               <button
                 type="button"
-                aria-label="Notifications"
-                onClick={() => navigate('/faq')}
+                aria-label={hasUnread ? `${unreadCount} unread notifications` : 'Notifications'}
+                onClick={() => setNotifOpen(true)}
                 className="relative p-2.5 text-white hover:text-neutral-300 transition-colors"
               >
                 <Bell size={22} strokeWidth={2} />
-                <span
-                  className="absolute top-2 right-2.5 w-2 h-2 bg-[#E50914] rounded-full ring-2 ring-black"
-                  aria-hidden
-                />
+                {hasUnread && (
+                  <span
+                    className="absolute top-0.5 right-0.5 min-w-[1.1rem] h-[1.1rem] px-[3px] flex items-center justify-center bg-[#E50914] rounded-full ring-2 ring-black text-[10px] font-bold leading-none text-white"
+                    aria-hidden
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </button>
 
+              {/* Profile menu */}
               <div className="relative">
                 <button
                   type="button"
@@ -171,7 +185,18 @@ function AppContent() {
                       className="fixed inset-0 z-40 cursor-default"
                       onClick={() => setProfileOpen(false)}
                     />
-                    <div className="absolute right-0 top-full mt-1 z-50 min-w-[10rem] rounded-md bg-neutral-900 border border-neutral-700 shadow-xl overflow-hidden">
+                    <div className="absolute right-0 top-full mt-1 z-50 min-w-[12rem] rounded-md bg-neutral-900 border border-neutral-700 shadow-xl overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileOpen(false);
+                          navigate('/department-management');
+                        }}
+                        className="flex w-full items-center gap-2 px-4 py-3 text-sm text-white hover:bg-neutral-800 transition-colors border-b border-neutral-800"
+                      >
+                        <Building2 size={16} />
+                        Department settings
+                      </button>
                       <button
                         type="button"
                         onClick={handleLogout}
@@ -236,6 +261,14 @@ function AppContent() {
             }
           />
           <Route
+            path="/department-management"
+            element={
+              <ProtectedRoute>
+                <DepartmentManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/search"
             element={
               <ProtectedRoute>
@@ -273,6 +306,9 @@ function AppContent() {
           </div>
         </nav>
       )}
+
+      {/* Notification slide-in panel */}
+      <NotificationPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
     </div>
   );
 }
