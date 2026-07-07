@@ -36,18 +36,10 @@ public static class DatabaseExtensions
         using var scope = app.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        if (IsPostgresProvider(app.Configuration))
-        {
-            context.Database.Migrate();
-            SeedRequestTypes(context);
-            return;
-        }
-
-        if (app.Environment.IsDevelopment())
-        {
-            context.Database.EnsureCreated();
-        }
-
+        // Migrate() works for both SQLite and Postgres and applies migrations
+        // incrementally, so new migrations are picked up without needing to
+        // delete/recreate the local database file.
+        context.Database.Migrate();
         SeedRequestTypes(context);
     }
 

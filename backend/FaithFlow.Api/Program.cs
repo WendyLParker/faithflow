@@ -25,6 +25,9 @@ builder.Services.AddHealthChecks();
 builder.Services.AddScoped<IProgressNoteRepository, ProgressNoteService>();
 builder.Services.AddScoped<IPrayerRepository, PrayerService>();
 builder.Services.AddScoped<IRequestTypeRepository, RequestTypeService>();
+builder.Services.AddScoped<IDepartmentRepository, DepartmentService>();
+builder.Services.AddScoped<INotificationRepository, NotificationService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddFaithFlowDatabase(builder.Configuration);
 
 // FluentValidation

@@ -11,6 +11,7 @@ public class PrayerResponseDto
     public List<string> Categories { get; set; } = new();
     public int RequestTypeId { get; set; }
     public string RequestTypeName { get; set; } = string.Empty;
+    public string RequestStatus { get; set; } = "New";
     public string? VoiceNoteUrl { get; set; }
     public string? ImageUrl { get; set; }
     public int StreakDays { get; set; }

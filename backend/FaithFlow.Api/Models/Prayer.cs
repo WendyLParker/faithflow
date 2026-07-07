@@ -27,6 +27,11 @@ namespace FaithFlow.Backend.Models
         public int RequestTypeId { get; set; }
         public RequestType RequestType { get; set; } = null!;
 
+        public RequestStatus RequestStatus { get; set; } = RequestStatus.New;
+
+        /// <summary>Email of the submitter, stored at creation time for acknowledgment notifications.</summary>
+        public string? RequesterEmail { get; set; }
+
         // Optional attachments (S3 URLs)
         public string? VoiceNoteUrl { get; set; }
         public string? ImageUrl { get; set; }

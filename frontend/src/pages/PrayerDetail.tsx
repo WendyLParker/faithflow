@@ -118,12 +118,12 @@ export default function PrayerDetail() {
             ) : (
               <CheckCircle size={20} />
             )}
-            Mark as Answered
+            Mark as Completed
           </button>
         )}
 
         {markAnswered.isError && (
-          <p className="message-error text-center">Failed to mark as answered. Please try again.</p>
+          <p className="message-error text-center">Failed to mark as completed. Please try again.</p>
         )}
 
         {!showDeleteConfirm ? (
