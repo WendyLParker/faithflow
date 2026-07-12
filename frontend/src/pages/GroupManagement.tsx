@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -22,22 +22,12 @@ import {
   useMyMemberships,
   useCreateGroup,
   useManagedGroups,
-  useGroupManagerAssignments,
-  useSetGroupManagers,
   useDeleteGroup,
 } from '@/hooks/useGroups';
 import { useMyRole, useAllRoles, useSetUserRole } from '@/hooks/useUserRole';
 import type { UserRoleDto } from '@/services/userRoleService';
-import type { GroupManagerAssignmentDto } from '@/services/notificationService';
 
-const EMPTY_ASSIGNMENTS: GroupManagerAssignmentDto[] = [];
 
-function sameIdSet(a: number[], b: number[]) {
-  if (a.length !== b.length) return false;
-  const sortedA = [...a].sort((x, y) => x - y);
-  const sortedB = [...b].sort((x, y) => x - y);
-  return sortedA.every((id, i) => id === sortedB[i]);
-}
 
 function userPrimaryLabel(user: { displayName: string; userEmail: string }) {
   return user.displayName || user.userEmail || 'Unknown user';
