@@ -4,9 +4,9 @@ using FaithFlow.Backend.Interfaces;
 
 namespace FaithFlow.Backend.DTOs.Validators;
 
-public class PrayerCreateDtoValidator : AbstractValidator<PrayerCreateDto>
+public class RequestCreateDtoValidator : AbstractValidator<RequestCreateDto>
 {
-    public PrayerCreateDtoValidator(IRequestTypeRepository requestTypeRepository)
+    public RequestCreateDtoValidator(IRequestTypeRepository requestTypeRepository)
     {
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Title is required")
@@ -19,5 +19,8 @@ public class PrayerCreateDtoValidator : AbstractValidator<PrayerCreateDto>
             .GreaterThan(0).WithMessage("Request type is required")
             .MustAsync(async (id, cancellation) => await requestTypeRepository.ExistsAsync(id))
             .WithMessage("Invalid request type");
+
+        RuleForEach(x => x.GroupIds)
+            .GreaterThan(0).WithMessage("Invalid group");
     }
 }

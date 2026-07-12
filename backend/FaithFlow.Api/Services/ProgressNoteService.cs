@@ -21,10 +21,10 @@ public class ProgressNoteService : IProgressNoteRepository
         return note;
     }
 
-    public async Task<IEnumerable<ProgressNote>> GetByPrayerAsync(int prayerId, string userId)
+    public async Task<IEnumerable<ProgressNote>> GetByRequestAsync(int requestId, string userId)
     {
         return await _context.ProgressNotes
-            .Where(pn => pn.PrayerId == prayerId && pn.UserId == userId)
+            .Where(pn => pn.RequestId == requestId && pn.UserId == userId)
             .OrderByDescending(pn => pn.EntryDate)
             .ToListAsync();
     }

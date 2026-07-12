@@ -18,25 +18,22 @@ public class ProgressNoteController : ControllerBase
         _progressNoteService = progressNoteService;
     }
 
-    private string GetCurrentUserId()
-    {
-        return User.FindFirst("sub")?.Value
-            ?? User.FindFirst("cognito:username")?.Value
-            ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value
-            ?? "unknown-user";
-    }
+    private string GetCurrentUserId() =>
+        User.FindFirst("sub")?.Value
+        ?? User.FindFirst("cognito:username")?.Value
+        ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value
+        ?? "unknown-user";
 
-    // GET: api/progressnote/prayer/5
-    [HttpGet("prayer/{prayerId}")]
-    public async Task<ActionResult<IEnumerable<ProgressNoteResponseDto>>> GetByPrayer(int prayerId)
+    [HttpGet("request/{requestId}")]
+    public async Task<ActionResult<IEnumerable<ProgressNoteResponseDto>>> GetByRequest(int requestId)
     {
         var userId = GetCurrentUserId();
-        var notes = await _progressNoteService.GetByPrayerAsync(prayerId, userId);
+        var notes = await _progressNoteService.GetByRequestAsync(requestId, userId);
 
         var dtos = notes.Select(n => new ProgressNoteResponseDto
         {
             Id = n.Id,
-            PrayerId = n.PrayerId,
+            RequestId = n.RequestId,
             Content = n.Content,
             EntryDate = n.EntryDate,
             MoodRating = n.MoodRating
@@ -45,7 +42,6 @@ public class ProgressNoteController : ControllerBase
         return Ok(dtos);
     }
 
-    // POST: api/progressnote
     [HttpPost]
     public async Task<ActionResult<ProgressNoteResponseDto>> Create([FromBody] ProgressNoteCreateDto dto)
     {
@@ -53,7 +49,7 @@ public class ProgressNoteController : ControllerBase
 
         var note = new ProgressNote
         {
-            PrayerId = dto.PrayerId,
+            RequestId = dto.RequestId,
             UserId = userId,
             Content = dto.Content,
             MoodRating = dto.MoodRating
@@ -64,16 +60,15 @@ public class ProgressNoteController : ControllerBase
         var response = new ProgressNoteResponseDto
         {
             Id = created.Id,
-            PrayerId = created.PrayerId,
+            RequestId = created.RequestId,
             Content = created.Content,
             EntryDate = created.EntryDate,
             MoodRating = created.MoodRating
         };
 
-        return CreatedAtAction(nameof(GetByPrayer), new { prayerId = created.PrayerId }, response);
+        return CreatedAtAction(nameof(GetByRequest), new { requestId = created.RequestId }, response);
     }
 
-    // DELETE: api/progressnote/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {

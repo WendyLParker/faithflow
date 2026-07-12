@@ -17,8 +17,8 @@ public class NotificationService : INotificationRepository
     public async Task<IReadOnlyList<Notification>> GetForUserAsync(string userId)
     {
         return await _context.Notifications
-            .Include(n => n.Prayer)
-                .ThenInclude(p => p.RequestType)
+            .Include(n => n.Request)
+                .ThenInclude(r => r.RequestType)
             .Where(n => n.RecipientUserId == userId && !n.IsRead)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
@@ -33,8 +33,8 @@ public class NotificationService : INotificationRepository
     public async Task<Notification?> GetByIdAsync(int id)
     {
         return await _context.Notifications
-            .Include(n => n.Prayer)
-                .ThenInclude(p => p.RequestType)
+            .Include(n => n.Request)
+                .ThenInclude(r => r.RequestType)
             .FirstOrDefaultAsync(n => n.Id == id);
     }
 

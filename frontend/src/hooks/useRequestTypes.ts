@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { requestTypeService } from '@/services/prayerService';
+import { requestTypeService } from '@/services/requestService';
 
 export const requestTypeKeys = {
   all: ['requestTypes'] as const,

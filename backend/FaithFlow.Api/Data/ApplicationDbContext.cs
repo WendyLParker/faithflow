@@ -10,66 +10,66 @@ public class ApplicationDbContext : DbContext
     {
     }
 
-    public DbSet<Prayer> Prayers { get; set; }
+    public DbSet<Request> Requests { get; set; }
     public DbSet<ProgressNote> ProgressNotes { get; set; }
-    public DbSet<Category> Categories { get; set; }
     public DbSet<RequestType> RequestTypes { get; set; }
-    public DbSet<Department> Departments { get; set; }
-    public DbSet<DepartmentRequestType> DepartmentRequestTypes { get; set; }
-    public DbSet<UserDepartment> UserDepartments { get; set; }
+    public DbSet<Group> Groups { get; set; }
+    public DbSet<RequestGroup> RequestGroups { get; set; }
+    public DbSet<UserGroup> UserGroups { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<UserRole> UserRoles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // ── Prayer relationships ─────────────────────────────────────────
         modelBuilder.Entity<ProgressNote>()
-            .HasOne(pn => pn.Prayer)
-            .WithMany(p => p.ProgressNotes)
-            .HasForeignKey(pn => pn.PrayerId)
+            .HasOne(pn => pn.Request)
+            .WithMany(r => r.ProgressNotes)
+            .HasForeignKey(pn => pn.RequestId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Prayer>()
-            .HasOne(p => p.RequestType)
-            .WithMany(rt => rt.Prayers)
-            .HasForeignKey(p => p.RequestTypeId)
+        modelBuilder.Entity<Request>()
+            .HasOne(r => r.RequestType)
+            .WithMany(rt => rt.Requests)
+            .HasForeignKey(r => r.RequestTypeId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ── Notification → Prayer ────────────────────────────────────────
         modelBuilder.Entity<Notification>()
-            .HasOne(n => n.Prayer)
+            .HasOne(n => n.Request)
             .WithMany()
-            .HasForeignKey(n => n.PrayerId)
+            .HasForeignKey(n => n.RequestId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ── DepartmentRequestType join ───────────────────────────────────
-        modelBuilder.Entity<DepartmentRequestType>()
-            .HasKey(d => new { d.DepartmentId, d.RequestTypeId });
+        modelBuilder.Entity<RequestGroup>()
+            .HasKey(rg => new { rg.RequestId, rg.GroupId });
 
-        modelBuilder.Entity<DepartmentRequestType>()
-            .HasOne(d => d.Department)
-            .WithMany(dept => dept.DepartmentRequestTypes)
-            .HasForeignKey(d => d.DepartmentId);
-
-        modelBuilder.Entity<DepartmentRequestType>()
-            .HasOne(d => d.RequestType)
-            .WithMany()
-            .HasForeignKey(d => d.RequestTypeId);
-
-        // ── UserDepartment → Department ──────────────────────────────────
-        modelBuilder.Entity<UserDepartment>()
-            .HasOne(ud => ud.Department)
-            .WithMany(d => d.Members)
-            .HasForeignKey(ud => ud.DepartmentId)
+        modelBuilder.Entity<RequestGroup>()
+            .HasOne(rg => rg.Request)
+            .WithMany(r => r.AssignedGroups)
+            .HasForeignKey(rg => rg.RequestId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Unique: one membership record per user per department
-        modelBuilder.Entity<UserDepartment>()
-            .HasIndex(ud => new { ud.UserId, ud.DepartmentId })
+        modelBuilder.Entity<RequestGroup>()
+            .HasOne(rg => rg.Group)
+            .WithMany()
+            .HasForeignKey(rg => rg.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserGroup>()
+            .HasOne(ug => ug.Group)
+            .WithMany(g => g.Members)
+            .HasForeignKey(ug => ug.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserGroup>()
+            .HasIndex(ug => new { ug.UserId, ug.GroupId })
             .IsUnique();
 
-        // ── Seed: RequestTypes ───────────────────────────────────────────
+        modelBuilder.Entity<UserRole>()
+            .HasIndex(ur => ur.UserId)
+            .IsUnique();
+
         modelBuilder.Entity<RequestType>().HasData(
             new RequestType { Id = 1, Name = "Ride" },
             new RequestType { Id = 2, Name = "Prayer" },
@@ -78,21 +78,11 @@ public class ApplicationDbContext : DbContext
             new RequestType { Id = 5, Name = "Labor" }
         );
 
-        // ── Seed: Departments ────────────────────────────────────────────
-        modelBuilder.Entity<Department>().HasData(
-            new Department { Id = 1, Name = "Chaplain Services",    Description = "Handles prayer and pastoral care requests." },
-            new Department { Id = 2, Name = "Transportation",       Description = "Handles ride and transport requests." },
-            new Department { Id = 3, Name = "Supply & Logistics",   Description = "Handles supply and materials requests." },
-            new Department { Id = 4, Name = "Facilities",           Description = "Handles service, maintenance, and labor requests." }
-        );
-
-        // ── Seed: Department ↔ RequestType mappings ──────────────────────
-        modelBuilder.Entity<DepartmentRequestType>().HasData(
-            new DepartmentRequestType { DepartmentId = 1, RequestTypeId = 2 }, // Chaplain ← Prayer
-            new DepartmentRequestType { DepartmentId = 2, RequestTypeId = 1 }, // Transportation ← Ride
-            new DepartmentRequestType { DepartmentId = 3, RequestTypeId = 3 }, // Supply & Logistics ← Supply
-            new DepartmentRequestType { DepartmentId = 4, RequestTypeId = 4 }, // Facilities ← Service
-            new DepartmentRequestType { DepartmentId = 4, RequestTypeId = 5 }  // Facilities ← Labor
+        modelBuilder.Entity<Group>().HasData(
+            new Group { Id = 1, Name = "Chaplain Services",    Description = "Handles prayer and pastoral care requests." },
+            new Group { Id = 2, Name = "Transportation",       Description = "Handles ride and transport requests." },
+            new Group { Id = 3, Name = "Supply & Logistics",   Description = "Handles supply and materials requests." },
+            new Group { Id = 4, Name = "Facilities",           Description = "Handles service, maintenance, and labor requests." }
         );
     }
 }

@@ -1,5 +1,3 @@
-using FaithFlow.Backend.Models;
-
 namespace FaithFlow.Backend.DTOs;
 
 public class NotificationDto
@@ -9,10 +7,9 @@ public class NotificationDto
     public bool IsRead { get; set; }
     public DateTime CreatedAt { get; set; }
 
-    // Embedded request info
-    public int PrayerId { get; set; }
-    public string PrayerTitle { get; set; } = string.Empty;
-    public string? PrayerContent { get; set; }
+    public int RequestId { get; set; }
+    public string RequestTitle { get; set; } = string.Empty;
+    public string? RequestContent { get; set; }
     public string RequestTypeName { get; set; } = string.Empty;
     public string RequestStatus { get; set; } = string.Empty;
 }

@@ -35,5 +35,5 @@ internal static class TestDbContextFactory
         context.SaveChanges();
     }
 
-    public static PrayerService CreatePrayerService(ApplicationDbContext context) => new(context);
+    public static RequestService CreateRequestService(ApplicationDbContext context) => new(context);
 }

@@ -1,8 +1,18 @@
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ActionCard from '@/components/ActionCard';
 import { dashboardActions } from '@/config/dashboardActions';
+import { useMyRole } from '@/hooks/useUserRole';
+import { useManagedGroups } from '@/hooks/useGroups';
 
 export default function Dashboard() {
+  const { data: myRole } = useMyRole();
+  const { data: managedGroups = [] } = useManagedGroups();
+
+  const canSeeAdmin = !!myRole?.isAdmin || managedGroups.length > 0;
+  const visibleActions = dashboardActions.filter(
+    (action) => action.id !== 'admin' || canSeeAdmin,
+  );
+
   return (
     <div className="page-container">
       <header className="mb-6">
@@ -16,7 +26,7 @@ export default function Dashboard() {
         aria-label="Dashboard actions"
         className="grid grid-cols-2 gap-3 sm:gap-4 max-w-md mx-auto"
       >
-        {dashboardActions.map((action) => (
+        {visibleActions.map((action) => (
           <ActionCard key={action.id} action={action} />
         ))}
       </nav>

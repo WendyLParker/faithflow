@@ -1,16 +1,15 @@
-namespace FaithFlow.Backend.Models
+namespace FaithFlow.Backend.Models;
+
+public class ProgressNote
 {
-    public class ProgressNote
-    {
-        public int Id { get; set; }
-        public string UserId { get; set; } = string.Empty;
+    public int Id { get; set; }
+    public string UserId { get; set; } = string.Empty;
 
-        public int PrayerId { get; set; }               // Link to the prayer
-        public string Content { get; set; } = string.Empty;
+    public int RequestId { get; set; }
+    public string Content { get; set; } = string.Empty;
 
-        public DateTime EntryDate { get; set; } = DateTime.UtcNow;
+    public DateTime EntryDate { get; set; } = DateTime.UtcNow;
 
-        public int? MoodRating { get; set; }            // 1-10 scale (optional)
-        public Prayer Prayer { get; set; } = null!;
-    }
+    public int? MoodRating { get; set; }
+    public Request Request { get; set; } = null!;
 }

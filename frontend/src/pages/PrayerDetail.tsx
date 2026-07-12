@@ -3,24 +3,24 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ArrowLeft, Loader2, Sparkles, Trash2, CheckCircle } from 'lucide-react';
 import {
-  usePrayer,
-  useMarkPrayerAnswered,
-  useDeletePrayer,
-} from '@/hooks/usePrayers';
+  useRequest,
+  useMarkRequestCompleted,
+  useDeleteRequest,
+} from '@/hooks/useRequests';
 
 export default function PrayerDetail() {
   const { id } = useParams<{ id: string }>();
-  const prayerId = Number(id);
+  const requestId = Number(id);
   const navigate = useNavigate();
 
-  const { data: prayer, isLoading, error } = usePrayer(prayerId);
-  const markAnswered = useMarkPrayerAnswered();
-  const deletePrayer = useDeletePrayer();
+  const { data: request, isLoading, error } = useRequest(requestId);
+  const markCompleted = useMarkRequestCompleted();
+  const deleteRequest = useDeleteRequest();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const handleMarkAnswered = async () => {
+  const handleMarkCompleted = async () => {
     try {
-      await markAnswered.mutateAsync(prayerId);
+      await markCompleted.mutateAsync(requestId);
     } catch {
       // shown via mutation state
     }
@@ -28,8 +28,8 @@ export default function PrayerDetail() {
 
   const handleDelete = async () => {
     try {
-      await deletePrayer.mutateAsync(prayerId);
-      navigate('/prayers');
+      await deleteRequest.mutateAsync(requestId);
+      navigate('/requests');
     } catch {
       setShowDeleteConfirm(false);
     }
@@ -43,10 +43,10 @@ export default function PrayerDetail() {
     );
   }
 
-  if (error || !prayer) {
+  if (error || !request) {
     return (
       <div className="page-container">
-        <Link to="/prayers" className="back-link">
+        <Link to="/requests" className="back-link">
           <ArrowLeft size={16} />
           Back to requests
         </Link>
@@ -57,63 +57,58 @@ export default function PrayerDetail() {
 
   return (
     <div className="page-container">
-      <Link to="/prayers" className="back-link">
+      <Link to="/requests" className="back-link">
         <ArrowLeft size={16} />
         Back to requests
       </Link>
 
       <div className="content-card">
-        {prayer.isAnswered && (
+        {request.isCompleted && (
           <div className="flex items-center gap-2 alert-info mb-5">
             <Sparkles size={20} className="text-[#9bada3] shrink-0" />
             <div>
               <p className="font-medium text-neutral-100">Completed</p>
-              {prayer.answeredDate && (
+              {request.completedDate && (
                 <p className="text-sm text-neutral-400">
-                  Answered on {format(new Date(prayer.answeredDate), 'MMMM d, yyyy')}
+                  Completed on {format(new Date(request.completedDate), 'MMMM d, yyyy')}
                 </p>
               )}
             </div>
           </div>
         )}
 
-        <h1 className="text-2xl font-bold text-white">{prayer.title}</h1>
+        <h1 className="text-2xl font-bold text-white">{request.title}</h1>
 
         <div className="flex flex-wrap items-center gap-2 mt-3">
-          {prayer.requestTypeName && (
-            <span className="badge">{prayer.requestTypeName}</span>
+          {request.requestTypeName && (
+            <span className="badge">{request.requestTypeName}</span>
           )}
+          {request.groupNames.map((group) => (
+            <span key={group} className="badge">
+              {group}
+            </span>
+          ))}
         </div>
 
         <p className="text-sm text-neutral-500 mt-2">
-          Posted {format(new Date(prayer.prayerDate), 'MMMM d, yyyy')}
+          Posted {format(new Date(request.requestDate), 'MMMM d, yyyy')}
         </p>
 
-        {prayer.categories.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {prayer.categories.map((cat) => (
-              <span key={cat} className="badge">
-                {cat}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {prayer.content && (
+        {request.content && (
           <p className="text-neutral-300 mt-5 leading-relaxed whitespace-pre-wrap">
-            {prayer.content}
+            {request.content}
           </p>
         )}
       </div>
 
       <div className="mt-6 space-y-3">
-        {!prayer.isAnswered && (
+        {!request.isCompleted && (
           <button
-            onClick={handleMarkAnswered}
-            disabled={markAnswered.isPending}
+            onClick={handleMarkCompleted}
+            disabled={markCompleted.isPending}
             className="btn-apple w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold disabled:opacity-50"
           >
-            {markAnswered.isPending ? (
+            {markCompleted.isPending ? (
               <Loader2 size={20} className="animate-spin" />
             ) : (
               <CheckCircle size={20} />
@@ -122,7 +117,7 @@ export default function PrayerDetail() {
           </button>
         )}
 
-        {markAnswered.isError && (
+        {markCompleted.isError && (
           <p className="message-error text-center">Failed to mark as completed. Please try again.</p>
         )}
 
@@ -146,10 +141,10 @@ export default function PrayerDetail() {
               </button>
               <button
                 onClick={handleDelete}
-                disabled={deletePrayer.isPending}
+                disabled={deleteRequest.isPending}
                 className="flex-1 py-2 text-sm font-medium text-white bg-red-700 rounded-lg hover:bg-red-600 disabled:opacity-50 border border-red-600"
               >
-                {deletePrayer.isPending ? 'Deleting...' : 'Delete'}
+                {deleteRequest.isPending ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>
