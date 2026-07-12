@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using FaithFlow.Backend.DTOs;
 using FaithFlow.Backend.Interfaces;
 using FaithFlow.Backend.Models;
+using FaithFlow.Backend.Common;
 
 namespace FaithFlow.Backend.Controllers;
 
@@ -12,29 +13,21 @@ namespace FaithFlow.Backend.Controllers;
 public class NotificationController : ControllerBase
 {
     private readonly INotificationRepository _notifications;
-    private readonly IPrayerRepository _prayers;
-    private readonly IDepartmentRepository _departments;
+    private readonly IRequestRepository _requests;
     private readonly IEmailService _email;
 
     public NotificationController(
         INotificationRepository notifications,
-        IPrayerRepository prayers,
-        IDepartmentRepository departments,
+        IRequestRepository requests,
         IEmailService email)
     {
         _notifications = notifications;
-        _prayers = prayers;
-        _departments = departments;
+        _requests = requests;
         _email = email;
     }
 
-    private string GetCurrentUserId() =>
-        User.FindFirst("sub")?.Value
-        ?? User.FindFirst("cognito:username")?.Value
-        ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value
-        ?? "unknown-user";
+    private string GetCurrentUserId() => ClaimsHelper.GetUserId(User);
 
-    // GET /api/notification
     [HttpGet]
     public async Task<ActionResult<IEnumerable<NotificationDto>>> GetMine()
     {
@@ -43,7 +36,6 @@ public class NotificationController : ControllerBase
         return Ok(notifications.Select(ToDto));
     }
 
-    // GET /api/notification/unread-count
     [HttpGet("unread-count")]
     public async Task<ActionResult<UnreadCountDto>> GetUnreadCount()
     {
@@ -52,7 +44,6 @@ public class NotificationController : ControllerBase
         return Ok(new UnreadCountDto { Count = count });
     }
 
-    // POST /api/notification/{id}/acknowledge
     [HttpPost("{id}/acknowledge")]
     public async Task<IActionResult> Acknowledge(int id)
     {
@@ -62,43 +53,37 @@ public class NotificationController : ControllerBase
         if (notification == null) return NotFound();
         if (notification.RecipientUserId != userId) return Forbid();
 
-        // Mark this notification as read
         await _notifications.MarkReadAsync(id);
 
-        // Load the prayer
-        var prayer = await _prayers.GetByIdAsync(notification.PrayerId, notification.Prayer.UserId);
-        if (prayer == null)
+        var request = await _requests.GetByIdAsync(notification.RequestId, notification.Request.UserId);
+        if (request == null)
         {
-            // Fallback: try loading without user scope
-            prayer = notification.Prayer;
+            request = notification.Request;
         }
 
-        // Advance status to Acknowledged if still New
-        if (prayer.RequestStatus == RequestStatus.New)
+        if (request.RequestStatus == RequestStatus.New)
         {
-            prayer.RequestStatus = RequestStatus.Acknowledged;
-            await _prayers.UpdateAsync(prayer);
+            request.RequestStatus = RequestStatus.Acknowledged;
+            await _requests.UpdateAsync(request);
 
-            // Notify the requester that their request was acknowledged
-            if (prayer.UserId != userId)
+            if (request.UserId != userId)
             {
                 await _notifications.CreateAsync(new Notification
                 {
-                    RecipientUserId = prayer.UserId,
-                    PrayerId = prayer.Id,
+                    RecipientUserId = request.UserId,
+                    RequestId = request.Id,
                     Type = NotificationType.RequestAcknowledged,
                 });
 
-                // Email the requester if they have an email on file
-                if (!string.IsNullOrWhiteSpace(prayer.RequesterEmail))
+                if (!string.IsNullOrWhiteSpace(request.RequesterEmail))
                 {
-                    var subject = $"Your {prayer.RequestType?.Name ?? "request"} request has been acknowledged";
+                    var subject = $"Your {request.RequestType?.Name ?? "request"} request has been acknowledged";
                     var body = $@"
                         <p>Hi,</p>
-                        <p>Your request <strong>{prayer.Title}</strong> has been acknowledged by a department member.</p>
+                        <p>Your request <strong>{request.Title}</strong> has been acknowledged by a group member.</p>
                         <p>Thank you for using the Request Tracker portal.</p>";
 
-                    await _email.SendAsync(prayer.RequesterEmail, subject, body);
+                    await _email.SendAsync(request.RequesterEmail, subject, body);
                 }
             }
         }
@@ -106,7 +91,6 @@ public class NotificationController : ControllerBase
         return NoContent();
     }
 
-    // POST /api/notification/{id}/dismiss  (for RequestAcknowledged notifications — just marks read)
     [HttpPost("{id}/dismiss")]
     public async Task<IActionResult> Dismiss(int id)
     {
@@ -126,10 +110,10 @@ public class NotificationController : ControllerBase
         Type = n.Type.ToString(),
         IsRead = n.IsRead,
         CreatedAt = n.CreatedAt,
-        PrayerId = n.PrayerId,
-        PrayerTitle = n.Prayer?.Title ?? string.Empty,
-        PrayerContent = n.Prayer?.Content,
-        RequestTypeName = n.Prayer?.RequestType?.Name ?? string.Empty,
-        RequestStatus = n.Prayer?.RequestStatus.ToString() ?? string.Empty,
+        RequestId = n.RequestId,
+        RequestTitle = n.Request?.Title ?? string.Empty,
+        RequestContent = n.Request?.Content,
+        RequestTypeName = n.Request?.RequestType?.Name ?? string.Empty,
+        RequestStatus = n.Request?.RequestStatus.ToString() ?? string.Empty,
     };
 }

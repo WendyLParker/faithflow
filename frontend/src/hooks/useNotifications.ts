@@ -1,25 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/services/notificationService';
+import { useAuth } from '@/hooks/useAuth';
 
 export const notificationKeys = {
-  all: ['notifications'] as const,
-  count: ['notifications', 'count'] as const,
+  all: (userId?: string) => ['notifications', userId] as const,
 };
 
 export function useNotifications() {
+  const { isLoggedIn, user } = useAuth();
+
   return useQuery({
-    queryKey: notificationKeys.all,
+    queryKey: notificationKeys.all(user?.sub),
     queryFn: notificationService.getAll,
-    refetchInterval: 30_000,
+    enabled: isLoggedIn,
+    refetchInterval: isLoggedIn ? 30_000 : false,
   });
 }
 
 export function useUnreadCount() {
-  return useQuery({
-    queryKey: notificationKeys.count,
-    queryFn: notificationService.getUnreadCount,
-    refetchInterval: 30_000,
-  });
+  const query = useNotifications();
+
+  return {
+    ...query,
+    data: query.data?.length ?? 0,
+  };
 }
 
 export function useAcknowledgeNotification() {
@@ -27,8 +31,7 @@ export function useAcknowledgeNotification() {
   return useMutation({
     mutationFn: (id: number) => notificationService.acknowledge(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
-      queryClient.invalidateQueries({ queryKey: notificationKeys.count });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
 }
@@ -38,8 +41,7 @@ export function useDismissNotification() {
   return useMutation({
     mutationFn: (id: number) => notificationService.dismiss(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
-      queryClient.invalidateQueries({ queryKey: notificationKeys.count });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
 }

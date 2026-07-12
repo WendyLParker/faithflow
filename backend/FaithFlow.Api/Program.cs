@@ -23,15 +23,16 @@ builder.Services.AddHealthChecks();
 
 // Register services
 builder.Services.AddScoped<IProgressNoteRepository, ProgressNoteService>();
-builder.Services.AddScoped<IPrayerRepository, PrayerService>();
+builder.Services.AddScoped<IRequestRepository, RequestService>();
 builder.Services.AddScoped<IRequestTypeRepository, RequestTypeService>();
-builder.Services.AddScoped<IDepartmentRepository, DepartmentService>();
+builder.Services.AddScoped<IGroupRepository, GroupService>();
+builder.Services.AddScoped<IUserRoleRepository, UserRoleService>();
 builder.Services.AddScoped<INotificationRepository, NotificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddFaithFlowDatabase(builder.Configuration);
 
 // FluentValidation
-builder.Services.AddValidatorsFromAssemblyContaining<PrayerCreateDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<RequestCreateDtoValidator>();
 
 // ====================== Swagger ======================
 builder.Services.AddSwaggerGen(c =>

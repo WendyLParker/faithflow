@@ -2,8 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FaithFlow.Backend.Models;
 
-/// <summary>Maps a Cognito user to a department. Stored by admin; used for notification routing.</summary>
-public class UserDepartment
+/// <summary>Maps a Cognito user to a group. Stored by admin; used for notification routing.</summary>
+public class UserGroup
 {
     public int Id { get; set; }
 
@@ -19,8 +19,11 @@ public class UserDepartment
     [MaxLength(320)]
     public string UserEmail { get; set; } = string.Empty;
 
-    public int DepartmentId { get; set; }
-    public Department Department { get; set; } = null!;
+    public int GroupId { get; set; }
+    public Group Group { get; set; } = null!;
 
     public bool EmailNotificationsEnabled { get; set; } = true;
+
+    /// <summary>Whether this member can manage the group (add/remove other members). Set by an admin.</summary>
+    public bool CanManage { get; set; } = false;
 }

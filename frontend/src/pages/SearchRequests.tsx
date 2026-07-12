@@ -1,24 +1,24 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Loader2, Search } from 'lucide-react';
-import { usePrayers } from '@/hooks/usePrayers';
-import PrayerCard from '@/components/PrayerCard';
+import { useRequests } from '@/hooks/useRequests';
+import RequestCard from '@/components/RequestCard';
 
 export default function SearchRequests() {
-  const { data: prayers = [], isLoading, error } = usePrayers();
+  const { data: requests = [], isLoading, error } = useRequests();
   const [query, setQuery] = useState('');
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
 
-    return prayers.filter((p) => {
-      const inTitle = p.title.toLowerCase().includes(q);
-      const inContent = p.content?.toLowerCase().includes(q);
-      const inCategories = p.categories.some((c) => c.toLowerCase().includes(q));
-      return inTitle || inContent || inCategories;
+    return requests.filter((r) => {
+      const inTitle = r.title.toLowerCase().includes(q);
+      const inContent = r.content?.toLowerCase().includes(q);
+      const inGroups = r.groupNames.some((g) => g.toLowerCase().includes(q));
+      return inTitle || inContent || inGroups;
     });
-  }, [prayers, query]);
+  }, [requests, query]);
 
   return (
     <div className="page-container">
@@ -42,7 +42,7 @@ export default function SearchRequests() {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Title, category, or keyword…"
+            placeholder="Title, type, or keyword…"
             className="form-input pl-10"
           />
         </div>
@@ -69,8 +69,8 @@ export default function SearchRequests() {
       )}
 
       <div className="space-y-3">
-        {results.map((prayer) => (
-          <PrayerCard key={prayer.id} prayer={prayer} />
+        {results.map((request) => (
+          <RequestCard key={request.id} request={request} />
         ))}
       </div>
     </div>

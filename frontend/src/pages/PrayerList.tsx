@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Loader2 } from 'lucide-react';
-import { usePrayers } from '@/hooks/usePrayers';
-import PrayerCard from '@/components/PrayerCard';
+import { useRequests } from '@/hooks/useRequests';
+import RequestCard from '@/components/RequestCard';
 
-type Filter = 'active' | 'answered';
+type Filter = 'active' | 'completed';
 
 export default function PrayerList() {
-  const { data: prayers = [], isLoading, error } = usePrayers();
+  const { data: requests = [], isLoading, error } = useRequests();
   const [searchParams] = useSearchParams();
   const scope = searchParams.get('scope');
   const status = searchParams.get('status');
@@ -21,8 +21,8 @@ export default function PrayerList() {
     }
   }, [status]);
 
-  const filtered = prayers.filter((p) =>
-    filter === 'active' ? !p.isAnswered : p.isAnswered
+  const filtered = requests.filter((r) =>
+    filter === 'active' ? !r.isCompleted : r.isCompleted
   );
 
   const pageTitle = isTeamOpenView ? 'Open Requests — My Team' : 'My Requests';
@@ -53,13 +53,13 @@ export default function PrayerList() {
           onClick={() => setFilter('active')}
           className={filter === 'active' ? 'filter-btn-active' : 'filter-btn'}
         >
-          {activeLabel} ({prayers.filter((p) => !p.isAnswered).length})
+          {activeLabel} ({requests.filter((r) => !r.isCompleted).length})
         </button>
         <button
-          onClick={() => setFilter('answered')}
-          className={filter === 'answered' ? 'filter-btn-active' : 'filter-btn'}
+          onClick={() => setFilter('completed')}
+          className={filter === 'completed' ? 'filter-btn-active' : 'filter-btn'}
         >
-          Completed ({prayers.filter((p) => p.isAnswered).length})
+          Completed ({requests.filter((r) => r.isCompleted).length})
         </button>
       </div>
 
@@ -90,8 +90,8 @@ export default function PrayerList() {
       )}
 
       <div className="space-y-3">
-        {filtered.map((prayer) => (
-          <PrayerCard key={prayer.id} prayer={prayer} />
+        {filtered.map((request) => (
+          <RequestCard key={request.id} request={request} />
         ))}
       </div>
     </div>

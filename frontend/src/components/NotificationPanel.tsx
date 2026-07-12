@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { X, CheckCircle, BellOff, Loader2, Bell } from 'lucide-react';
 import { useNotifications, useAcknowledgeNotification, useDismissNotification } from '@/hooks/useNotifications';
 import type { NotificationDto } from '@/services/notificationService';
@@ -9,9 +10,15 @@ interface Props {
 }
 
 export default function NotificationPanel({ open, onClose }: Props) {
-  const { data: notifications = [], isLoading } = useNotifications();
+  const { data: notifications = [], isLoading, isError, refetch } = useNotifications();
   const acknowledge = useAcknowledgeNotification();
   const dismiss = useDismissNotification();
+
+  useEffect(() => {
+    if (open) {
+      void refetch();
+    }
+  }, [open, refetch]);
 
   return (
     <>
@@ -61,7 +68,11 @@ export default function NotificationPanel({ open, onClose }: Props) {
             </div>
           )}
 
-          {!isLoading && notifications.length === 0 && (
+          {isError && (
+            <div className="alert-error m-4">Failed to load notifications. Please try again.</div>
+          )}
+
+          {!isLoading && !isError && notifications.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
               <BellOff size={40} className="text-neutral-600 mb-4" />
               <p className="text-neutral-400 text-sm">You're all caught up!</p>
@@ -69,7 +80,7 @@ export default function NotificationPanel({ open, onClose }: Props) {
             </div>
           )}
 
-          {!isLoading && notifications.length > 0 && (
+          {!isLoading && !isError && notifications.length > 0 && (
             <ul className="divide-y divide-neutral-800">
               {notifications.map((n) => (
                 <li key={n.id}>
@@ -123,11 +134,11 @@ function NotificationCard({
       </div>
 
       {/* Request title */}
-      <p className="text-sm font-semibold text-neutral-100 mb-1 leading-snug">{n.prayerTitle}</p>
+      <p className="text-sm font-semibold text-neutral-100 mb-1 leading-snug">{n.requestTitle}</p>
 
       {/* Preview */}
-      {n.prayerContent && (
-        <p className="text-xs text-neutral-400 line-clamp-2 mb-3">{n.prayerContent}</p>
+      {n.requestContent && (
+        <p className="text-xs text-neutral-400 line-clamp-2 mb-3">{n.requestContent}</p>
       )}
 
       {/* Status pill */}

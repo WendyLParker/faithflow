@@ -5,35 +5,53 @@ export interface NotificationDto {
   type: 'NewRequest' | 'RequestAcknowledged';
   isRead: boolean;
   createdAt: string;
-  prayerId: number;
-  prayerTitle: string;
-  prayerContent?: string;
+  requestId: number;
+  requestTitle: string;
+  requestContent?: string;
   requestTypeName: string;
   requestStatus: string;
 }
 
-export interface DepartmentDto {
+export interface GroupDto {
   id: number;
   name: string;
   description?: string;
-  requestTypeNames: string[];
 }
 
-export interface DepartmentMemberDto {
+export interface GroupMemberDto {
   id: number;
   userId: string;
   displayName: string;
   userEmail: string;
   emailNotificationsEnabled: boolean;
-  departmentId: number;
-  departmentName: string;
+  groupId: number;
+  groupName: string;
+  canManage: boolean;
 }
 
-export interface AddDepartmentMemberDto {
+export interface AddGroupMemberDto {
   userId: string;
   displayName: string;
   userEmail: string;
   emailNotificationsEnabled: boolean;
+}
+
+export interface CreateGroupDto {
+  name: string;
+  description?: string;
+}
+
+export interface GroupManagerAssignmentDto {
+  groupId: number;
+  groupName: string;
+  canManage: boolean;
+}
+
+export interface SetGroupManagersDto {
+  userId: string;
+  displayName: string;
+  userEmail: string;
+  groupIds: number[];
 }
 
 export const notificationService = {
@@ -56,34 +74,61 @@ export const notificationService = {
   },
 };
 
-export const departmentService = {
-  async getAll(): Promise<DepartmentDto[]> {
-    const res = await api.get<DepartmentDto[]>('/api/department');
+export const groupService = {
+  async getAll(): Promise<GroupDto[]> {
+    const res = await api.get<GroupDto[]>('/api/group');
     return res.data;
   },
 
-  async getMembers(departmentId: number): Promise<DepartmentMemberDto[]> {
-    const res = await api.get<DepartmentMemberDto[]>(`/api/department/${departmentId}/members`);
+  async getManaged(): Promise<GroupDto[]> {
+    const res = await api.get<GroupDto[]>('/api/group/managed');
     return res.data;
   },
 
-  async getMyMemberships(): Promise<DepartmentMemberDto[]> {
-    const res = await api.get<DepartmentMemberDto[]>('/api/department/my');
+  async create(data: CreateGroupDto): Promise<GroupDto> {
+    const res = await api.post<GroupDto>('/api/group', data);
     return res.data;
   },
 
-  async addMember(departmentId: number, data: AddDepartmentMemberDto): Promise<DepartmentMemberDto> {
-    const res = await api.post<DepartmentMemberDto>(`/api/department/${departmentId}/members`, data);
+  async delete(groupId: number): Promise<void> {
+    await api.delete(`/api/group/${groupId}`);
+  },
+
+  async getMembers(groupId: number): Promise<GroupMemberDto[]> {
+    const res = await api.get<GroupMemberDto[]>(`/api/group/${groupId}/members`);
+    return res.data;
+  },
+
+  async getMyMemberships(): Promise<GroupMemberDto[]> {
+    const res = await api.get<GroupMemberDto[]>('/api/group/my');
+    return res.data;
+  },
+
+  async addMember(groupId: number, data: AddGroupMemberDto): Promise<GroupMemberDto> {
+    const res = await api.post<GroupMemberDto>(`/api/group/${groupId}/members`, data);
     return res.data;
   },
 
   async updateEmailPreference(membershipId: number, enabled: boolean): Promise<void> {
-    await api.patch(`/api/department/members/${membershipId}/email-preference`, {
+    await api.patch(`/api/group/members/${membershipId}/email-preference`, {
       emailNotificationsEnabled: enabled,
     });
   },
 
   async removeMember(membershipId: number): Promise<void> {
-    await api.delete(`/api/department/members/${membershipId}`);
+    await api.delete(`/api/group/members/${membershipId}`);
+  },
+
+  async updateManager(membershipId: number, canManage: boolean): Promise<void> {
+    await api.patch(`/api/group/members/${membershipId}/manager`, { canManage });
+  },
+
+  async getManagerAssignments(userId: string): Promise<GroupManagerAssignmentDto[]> {
+    const res = await api.get<GroupManagerAssignmentDto[]>(`/api/group/manager-assignments/${userId}`);
+    return res.data;
+  },
+
+  async setManagerAssignments(data: SetGroupManagersDto): Promise<void> {
+    await api.post('/api/group/manager-assignments', data);
   },
 };

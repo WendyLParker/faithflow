@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
-import { FilePlus, List, MessageCircle, Search } from 'lucide-react';
+import { FilePlus, List, MessageCircle, Search, ShieldCheck } from 'lucide-react';
 
-export type TileTone = 'slate' | 'sage' | 'sand' | 'mist';
+export type TileTone = 'slate' | 'sage' | 'sand' | 'mist' | 'clay';
 
 export type DashboardAction = {
   id: string;
@@ -36,13 +36,18 @@ export const tileToneStyles: Record<
     icon: 'text-[#96abab]',
     description: 'text-[#859a9a]',
   },
+  clay: {
+    tile: 'bg-[#3a2f2f] border-[#4d3f3f] hover:bg-[#413534] hover:border-[#5c4c4c]',
+    icon: 'text-[#c19a9a]',
+    description: 'text-[#ab8888]',
+  },
 };
 
 export const dashboardActions: DashboardAction[] = [
   {
     id: 'create',
     title: 'Create Request',
-    description: 'Start a new request. Pick a type and assign to a department.',
+    description: 'Start a new request. Pick a type and describe what you need.',
     to: '/add',
     icon: FilePlus,
     tone: 'slate',
@@ -51,14 +56,14 @@ export const dashboardActions: DashboardAction[] = [
     id: 'track',
     title: 'Track Requests',
     description: 'View and follow the status of your open and completed requests.',
-    to: '/prayers',
+    to: '/requests',
     icon: List,
     tone: 'sage',
   },
   {
     id: 'search',
     title: 'Search Requests',
-    description: 'Find requests by title, category, or keyword.',
+    description: 'Find requests by title, type, or keyword.',
     to: '/search',
     icon: Search,
     tone: 'mist',
@@ -70,5 +75,13 @@ export const dashboardActions: DashboardAction[] = [
     to: '/faq',
     icon: MessageCircle,
     tone: 'sand',
+  },
+  {
+    id: 'admin',
+    title: 'Admin',
+    description: 'Manage users and groups to control notification routing.',
+    to: '/group-management',
+    icon: ShieldCheck,
+    tone: 'clay',
   }
 ];

@@ -2,10 +2,12 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface AuthUser {
   sub: string;
@@ -19,45 +21,119 @@ type AuthContextValue = {
   logout: () => void;
 };
 
-function parseIdToken(idToken: string): AuthUser | null {
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
-    const payload = idToken.split('.')[1];
-    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
-    return {
-      sub: decoded.sub ?? '',
-      email: decoded.email ?? '',
-    };
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
   } catch {
     return null;
   }
 }
 
-function getUserFromStorage(): AuthUser | null {
+export function isTokenExpired(token: string): boolean {
+  const payload = decodeJwtPayload(token);
+  const exp = payload?.exp;
+  if (typeof exp !== 'number') return true;
+  return Date.now() >= exp * 1000;
+}
+
+function getTokenExpiresAt(token: string): number | null {
+  const payload = decodeJwtPayload(token);
+  const exp = payload?.exp;
+  return typeof exp === 'number' ? exp * 1000 : null;
+}
+
+function parseIdToken(idToken: string): AuthUser | null {
+  const decoded = decodeJwtPayload(idToken);
+  if (!decoded) return null;
+  return {
+    sub: String(decoded.sub ?? ''),
+    email: String(decoded.email ?? ''),
+  };
+}
+
+function clearStoredAuth() {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('idToken');
+}
+
+function getInitialAuthState(): { isLoggedIn: boolean; user: AuthUser | null } {
+  const accessToken = localStorage.getItem('accessToken');
   const idToken = localStorage.getItem('idToken');
-  return idToken ? parseIdToken(idToken) : null;
+
+  if (!accessToken || isTokenExpired(accessToken)) {
+    if (accessToken || idToken) clearStoredAuth();
+    return { isLoggedIn: false, user: null };
+  }
+
+  return {
+    isLoggedIn: true,
+    user: idToken && !isTokenExpired(idToken) ? parseIdToken(idToken) : null,
+  };
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    () => !!localStorage.getItem('accessToken'),
-  );
-  const [user, setUser] = useState<AuthUser | null>(() => getUserFromStorage());
+  const queryClient = useQueryClient();
+  const [authState, setAuthState] = useState(getInitialAuthState);
+  const { isLoggedIn, user } = authState;
 
   const login = useCallback((accessToken: string, idToken: string) => {
+    queryClient.removeQueries();
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('idToken', idToken);
-    setIsLoggedIn(true);
-    setUser(parseIdToken(idToken));
-  }, []);
+    setAuthState({
+      isLoggedIn: true,
+      user: parseIdToken(idToken),
+    });
+  }, [queryClient]);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('idToken');
-    setIsLoggedIn(false);
-    setUser(null);
-  }, []);
+    clearStoredAuth();
+    queryClient.removeQueries();
+    setAuthState({ isLoggedIn: false, user: null });
+  }, [queryClient]);
+
+  // Log out when the access token expires, and re-check when the tab regains focus.
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken || isTokenExpired(accessToken)) {
+      logout();
+      return;
+    }
+
+    const expiresAt = getTokenExpiresAt(accessToken);
+    if (!expiresAt) {
+      logout();
+      return;
+    }
+
+    const timeout = window.setTimeout(logout, Math.max(0, expiresAt - Date.now()));
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return;
+      const token = localStorage.getItem('accessToken');
+      if (!token || isTokenExpired(token)) logout();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearTimeout(timeout);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isLoggedIn, logout]);
+
+  // If the API rejects the token (401), clear the session.
+  useEffect(() => {
+    const handleUnauthorized = () => logout();
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, [logout]);
 
   const value = useMemo(
     () => ({ isLoggedIn, user, login, logout }),

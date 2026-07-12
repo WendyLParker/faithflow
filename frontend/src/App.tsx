@@ -8,7 +8,7 @@ import {
   LifeBuoy,
   Bell,
   User,
-  Building2,
+  Settings,
 } from 'lucide-react';
 import {
   BrowserRouter as Router,
@@ -26,14 +26,16 @@ import PrayerList from './pages/PrayerList';
 import CreatePrayer from './pages/CreatePrayer';
 import PrayerDetail from './pages/PrayerDetail';
 import Departments from './pages/Departments';
-import DepartmentManagement from './pages/DepartmentManagement';
+import GroupManagement from './pages/GroupManagement';
 import SearchRequests from './pages/SearchRequests';
 import FAQ from './pages/FAQ';
+import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import RootRedirect from './components/RootRedirect';
 import NotificationPanel from './components/NotificationPanel';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { useUnreadCount } from './hooks/useNotifications';
+import { useMyRole } from './hooks/useUserRole';
 
 type NavItem = {
   path: string;
@@ -59,10 +61,10 @@ const loggedInNav: NavItem[] = [
     match: (p) => p === '/dashboard',
   },
   {
-    path: '/prayers',
+    path: '/requests',
     label: 'Requests',
     icon: List,
-    match: (p) => p.startsWith('/prayers'),
+    match: (p) => p.startsWith('/requests'),
   },
   {
     path: '/add',
@@ -80,7 +82,7 @@ const loggedInNav: NavItem[] = [
     path: '/faq',
     label: 'FAQ',
     icon: LifeBuoy,
-    match: (p) => p === '/faq' || p === '/departments' || p === '/department-management',
+    match: (p) => p === '/faq' || p === '/departments' || p === '/group-management',
   },
 ];
 
@@ -115,12 +117,21 @@ function BottomNavItem({
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, user } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
 
   const { data: unreadCount = 0 } = useUnreadCount();
+  const { data: myRole } = useMyRole();
   const hasUnread = isLoggedIn && unreadCount > 0;
+
+  const greeting = isLoggedIn
+    ? myRole?.displayName
+      ? `Hello, ${myRole.displayName}`
+      : user?.email
+        ? `Hello, ${user.email}`
+        : null
+    : null;
 
   const handleLogout = () => {
     setProfileOpen(false);
@@ -147,6 +158,13 @@ function AppContent() {
 
           {isLoggedIn ? (
             <div className="flex items-center gap-0.5 shrink-0">
+              {/* User greeting */}
+              {greeting && (
+                <span className="hidden sm:block text-xs text-neutral-400 mr-1 max-w-[160px] truncate">
+                  {greeting}
+                </span>
+              )}
+
               {/* Notification bell */}
               <button
                 type="button"
@@ -186,21 +204,23 @@ function AppContent() {
                       onClick={() => setProfileOpen(false)}
                     />
                     <div className="absolute right-0 top-full mt-1 z-50 min-w-[12rem] rounded-md bg-neutral-900 border border-neutral-700 shadow-xl overflow-hidden">
+                      {greeting && (
+                        <div className="px-4 py-2.5 border-b border-neutral-800">
+                          <p className="text-xs text-neutral-500 truncate">{greeting}</p>
+                        </div>
+                      )}
                       <button
                         type="button"
-                        onClick={() => {
-                          setProfileOpen(false);
-                          navigate('/department-management');
-                        }}
-                        className="flex w-full items-center gap-2 px-4 py-3 text-sm text-white hover:bg-neutral-800 transition-colors border-b border-neutral-800"
+                        onClick={() => { setProfileOpen(false); navigate('/profile'); }}
+                        className="flex w-full items-center gap-2 px-4 py-3 text-sm text-white hover:bg-neutral-800 transition-colors"
                       >
-                        <Building2 size={16} />
-                        Department settings
+                        <Settings size={16} />
+                        Manage profile
                       </button>
                       <button
                         type="button"
                         onClick={handleLogout}
-                        className="flex w-full items-center gap-2 px-4 py-3 text-sm text-white hover:bg-neutral-800 transition-colors"
+                        className="flex w-full items-center gap-2 px-4 py-3 text-sm text-white hover:bg-neutral-800 transition-colors border-t border-neutral-800"
                       >
                         <LogOut size={16} />
                         Sign out
@@ -229,7 +249,7 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<ProtectedDashboard />} />
           <Route
-            path="/prayers"
+            path="/requests"
             element={
               <ProtectedRoute>
                 <PrayerList />
@@ -237,7 +257,7 @@ function AppContent() {
             }
           />
           <Route
-            path="/prayers/:id"
+            path="/requests/:id"
             element={
               <ProtectedRoute>
                 <PrayerDetail />
@@ -261,10 +281,10 @@ function AppContent() {
             }
           />
           <Route
-            path="/department-management"
+            path="/group-management"
             element={
               <ProtectedRoute>
-                <DepartmentManagement />
+                <GroupManagement />
               </ProtectedRoute>
             }
           />
@@ -281,6 +301,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <FAQ />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />
