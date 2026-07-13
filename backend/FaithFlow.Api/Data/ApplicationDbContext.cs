@@ -67,6 +67,10 @@ public class ApplicationDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<UserRole>()
+            .Property(ur => ur.Id)
+            .ValueGeneratedOnAdd();
+
+        modelBuilder.Entity<UserRole>()
             .HasIndex(ur => ur.UserId)
             .IsUnique();
 
@@ -79,10 +83,10 @@ public class ApplicationDbContext : DbContext
         );
 
         modelBuilder.Entity<Group>().HasData(
-            new Group { Id = 1, Name = "Chaplain Services",    Description = "Handles prayer and pastoral care requests." },
-            new Group { Id = 2, Name = "Transportation",       Description = "Handles ride and transport requests." },
-            new Group { Id = 3, Name = "Supply & Logistics",   Description = "Handles supply and materials requests." },
-            new Group { Id = 4, Name = "Facilities",           Description = "Handles service, maintenance, and labor requests." }
+            new Group { Id = 1, Name = "Chaplain Services", Description = "Handles prayer and pastoral care requests." },
+            new Group { Id = 2, Name = "Transportation", Description = "Handles ride and transport requests." },
+            new Group { Id = 3, Name = "Supply & Logistics", Description = "Handles supply and materials requests." },
+            new Group { Id = 4, Name = "Facilities", Description = "Handles service, maintenance, and labor requests." }
         );
     }
 }
