@@ -13,7 +13,6 @@ namespace FaithFlow.Backend.Migrations
             migrationBuilder.AddColumn<bool>(
                 name: "CanManage",
                 table: "UserGroups",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: false);
         }

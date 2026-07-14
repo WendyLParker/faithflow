@@ -120,7 +120,7 @@ public class GroupService : IGroupRepository
     public async Task<IReadOnlyList<Group>> GetManagedGroupsAsync(string userId)
     {
         return await _context.Groups
-            .Where(g => g.Members.Any(m => m.UserId == userId && m.CanManage))
+            .Where(g => g.Members.Any(m => m.UserId == userId && m.CanManage == true))
             .OrderBy(g => g.Id)
             .ToListAsync();
     }
@@ -128,7 +128,7 @@ public class GroupService : IGroupRepository
     public async Task<bool> CanManageGroupAsync(string userId, int groupId)
     {
         return await _context.UserGroups
-            .AnyAsync(ug => ug.GroupId == groupId && ug.UserId == userId && ug.CanManage);
+            .AnyAsync(ug => ug.GroupId == groupId && ug.UserId == userId && ug.CanManage == true);
     }
 
     public async Task<IReadOnlyDictionary<string, UserGroup>> GetPrimaryMembershipByUserAsync()
