@@ -99,6 +99,20 @@ If you use hosted UI or callback URLs, add your Amplify domain to the Cognito ap
 
 ## Troubleshooting
 
+### `argument of AND must be type boolean, not type integer` (UserGroups.CanManage)
+
+`CanManage` was added as SQLite `INTEGER` in a migration. PostgreSQL stores it as integer, but EF generates boolean SQL (`AND u."CanManage"`), which fails.
+
+**Fix:** Deploy a build with migration `FixUserGroupsCanManageBoolean`.
+
+Manual RDS fix:
+
+```sql
+ALTER TABLE "UserGroups"
+  ALTER COLUMN "CanManage" TYPE boolean
+  USING ("CanManage" <> 0);
+```
+
 ### `null value in column "Id" of relation "UserRoles"`
 
 The `UserRoles` table was added in a migration scaffolded for SQLite only. On PostgreSQL the `Id` column may exist without an identity/sequence, so inserts fail in production.
