@@ -25,9 +25,11 @@ namespace FaithFlow.Backend.Migrations
                               AND column_name = 'CanManage'
                               AND data_type <> 'boolean'
                         ) THEN
+                            ALTER TABLE "UserGroups" ALTER COLUMN "CanManage" DROP DEFAULT;
                             ALTER TABLE "UserGroups"
                                 ALTER COLUMN "CanManage" TYPE boolean
                                 USING ("CanManage" <> 0);
+                            ALTER TABLE "UserGroups" ALTER COLUMN "CanManage" SET DEFAULT false;
                         END IF;
                     END $$;
                     """);
@@ -51,9 +53,11 @@ namespace FaithFlow.Backend.Migrations
                               AND column_name = 'CanManage'
                               AND data_type = 'boolean'
                         ) THEN
+                            ALTER TABLE "UserGroups" ALTER COLUMN "CanManage" DROP DEFAULT;
                             ALTER TABLE "UserGroups"
                                 ALTER COLUMN "CanManage" TYPE integer
                                 USING (CASE WHEN "CanManage" THEN 1 ELSE 0 END);
+                            ALTER TABLE "UserGroups" ALTER COLUMN "CanManage" SET DEFAULT 0;
                         END IF;
                     END $$;
                     """);

@@ -108,9 +108,11 @@ If you use hosted UI or callback URLs, add your Amplify domain to the Cognito ap
 Manual RDS fix:
 
 ```sql
+ALTER TABLE "UserGroups" ALTER COLUMN "CanManage" DROP DEFAULT;
 ALTER TABLE "UserGroups"
   ALTER COLUMN "CanManage" TYPE boolean
   USING ("CanManage" <> 0);
+ALTER TABLE "UserGroups" ALTER COLUMN "CanManage" SET DEFAULT false;
 ```
 
 ### `null value in column "Id" of relation "UserRoles"`
