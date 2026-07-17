@@ -12,6 +12,8 @@ public class NotificationDto
     public string? RequestContent { get; set; }
     public string RequestTypeName { get; set; } = string.Empty;
     public string RequestStatus { get; set; } = string.Empty;
+    public string? CommentContent { get; set; }
+    public string? CommentAuthorName { get; set; }
 }
 
 public class UnreadCountDto

@@ -2,19 +2,45 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   requestService,
   type RequestCreateDto,
+  type RequestScope,
   type RequestUpdateDto,
 } from '@/services/requestService';
 
 export const requestKeys = {
-  all: ['requests'] as const,
+  sent: ['requests', 'sent'] as const,
+  received: ['requests', 'received'] as const,
   detail: (id: number) => ['requests', id] as const,
 };
 
-export function useRequests() {
+export function useSentRequests() {
   return useQuery({
-    queryKey: requestKeys.all,
-    queryFn: requestService.getAll,
+    queryKey: requestKeys.sent,
+    queryFn: () => requestService.getAll('sent'),
   });
+}
+
+export function useReceivedRequests() {
+  return useQuery({
+    queryKey: requestKeys.received,
+    queryFn: () => requestService.getAll('received'),
+  });
+}
+
+export function useRequestInbox() {
+  const sent = useSentRequests();
+  const received = useReceivedRequests();
+
+  return {
+    sent: sent.data ?? [],
+    received: received.data ?? [],
+    isLoading: sent.isLoading || received.isLoading,
+    error: sent.error ?? received.error,
+  };
+}
+
+/** @deprecated Prefer useSentRequests or useRequestInbox */
+export function useRequests() {
+  return useSentRequests();
 }
 
 export function useRequest(id: number) {
@@ -25,13 +51,18 @@ export function useRequest(id: number) {
   });
 }
 
+function invalidateRequestLists(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ['requests', 'sent'] });
+  queryClient.invalidateQueries({ queryKey: ['requests', 'received'] });
+}
+
 export function useCreateRequest() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: RequestCreateDto) => requestService.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: requestKeys.all });
+      invalidateRequestLists(queryClient);
     },
   });
 }
@@ -43,7 +74,7 @@ export function useUpdateRequest() {
     mutationFn: ({ id, data }: { id: number; data: RequestUpdateDto }) =>
       requestService.update(id, data),
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: requestKeys.all });
+      invalidateRequestLists(queryClient);
       queryClient.invalidateQueries({ queryKey: requestKeys.detail(id) });
     },
   });
@@ -55,7 +86,7 @@ export function useDeleteRequest() {
   return useMutation({
     mutationFn: (id: number) => requestService.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: requestKeys.all });
+      invalidateRequestLists(queryClient);
     },
   });
 }
@@ -64,10 +95,29 @@ export function useMarkRequestCompleted() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => requestService.markAsCompleted(id),
+    mutationFn: (id: number) => requestService.close(id),
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: requestKeys.all });
+      invalidateRequestLists(queryClient);
       queryClient.invalidateQueries({ queryKey: requestKeys.detail(id) });
     },
   });
 }
+
+export function useFulfillRequest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => requestService.fulfill(id),
+    onSuccess: (_, id) => {
+      invalidateRequestLists(queryClient);
+      queryClient.invalidateQueries({ queryKey: requestKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+}
+
+export function useCloseRequest() {
+  return useMarkRequestCompleted();
+}
+
+export type { RequestScope };

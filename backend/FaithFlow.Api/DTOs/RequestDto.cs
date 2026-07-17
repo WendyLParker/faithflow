@@ -12,6 +12,10 @@ public class RequestResponseDto
     public string RequestTypeName { get; set; } = string.Empty;
     public List<string> GroupNames { get; set; } = new();
     public string RequestStatus { get; set; } = "New";
+    public DateTime? FulfilledDate { get; set; }
+    public bool IsOwnedByCurrentUser { get; set; }
+    public bool CanFulfill { get; set; }
+    public bool CanClose { get; set; }
     public string? VoiceNoteUrl { get; set; }
     public string? ImageUrl { get; set; }
     public int StreakDays { get; set; }

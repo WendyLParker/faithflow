@@ -103,8 +103,10 @@ dotnet restore
 dotnet run
 ```
 
-- API: [http://localhost:5000](http://localhost:5000)
-- Swagger (dev only): [http://localhost:5000/swagger](http://localhost:5000/swagger)
+- API: [http://localhost:5001](http://localhost:5001)
+- Swagger (dev only): [http://localhost:5001/swagger](http://localhost:5001/swagger)
+
+> **macOS note:** Port 5000 is often taken by AirPlay Receiver. The API uses **5001** locally to avoid that conflict.
 
 Configure Cognito settings in `appsettings.Development.json` before using auth endpoints.
 

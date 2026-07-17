@@ -17,6 +17,8 @@ export interface RequestUpdateDto {
   isCompleted?: boolean;
 }
 
+export type RequestScope = 'sent' | 'received';
+
 export interface RequestResponseDto {
   id: number;
   title: string;
@@ -27,6 +29,11 @@ export interface RequestResponseDto {
   groupNames: string[];
   requestTypeId: number;
   requestTypeName: string;
+  requestStatus: string;
+  fulfilledDate?: string;
+  isOwnedByCurrentUser: boolean;
+  canFulfill: boolean;
+  canClose: boolean;
   streakDays?: number;
 }
 
@@ -38,8 +45,10 @@ export const requestTypeService = {
 };
 
 export const requestService = {
-  async getAll() {
-    const response = await api.get<RequestResponseDto[]>('/api/request');
+  async getAll(scope: RequestScope = 'sent') {
+    const response = await api.get<RequestResponseDto[]>('/api/request', {
+      params: { scope },
+    });
     return response.data;
   },
 
@@ -62,7 +71,18 @@ export const requestService = {
     await api.delete(`/api/request/${id}`);
   },
 
+  async fulfill(id: number) {
+    const response = await api.post<RequestResponseDto>(`/api/request/${id}/fulfill`);
+    return response.data;
+  },
+
+  async close(id: number) {
+    const response = await api.post<RequestResponseDto>(`/api/request/${id}/close`);
+    return response.data;
+  },
+
+  /** @deprecated Use close() after assignee has fulfilled */
   async markAsCompleted(id: number) {
-    return requestService.update(id, { isCompleted: true });
+    return requestService.close(id);
   },
 };

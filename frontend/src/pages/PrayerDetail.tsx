@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { format } from 'date-fns';
-import { ArrowLeft, Loader2, Sparkles, Trash2, CheckCircle } from 'lucide-react';
+import { format, formatDistanceToNow } from 'date-fns';
+import { ArrowLeft, Loader2, Sparkles, Trash2, CheckCircle, MessageSquare, Send } from 'lucide-react';
 import {
   useRequest,
-  useMarkRequestCompleted,
+  useCloseRequest,
+  useFulfillRequest,
   useDeleteRequest,
 } from '@/hooks/useRequests';
+import { useRequestComments, useAddRequestComment } from '@/hooks/useRequestComments';
 
 export default function PrayerDetail() {
   const { id } = useParams<{ id: string }>();
@@ -14,13 +16,25 @@ export default function PrayerDetail() {
   const navigate = useNavigate();
 
   const { data: request, isLoading, error } = useRequest(requestId);
-  const markCompleted = useMarkRequestCompleted();
+  const { data: comments = [], isLoading: commentsLoading } = useRequestComments(requestId);
+  const closeRequest = useCloseRequest();
+  const fulfillRequest = useFulfillRequest();
   const deleteRequest = useDeleteRequest();
+  const addComment = useAddRequestComment();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [commentText, setCommentText] = useState('');
 
-  const handleMarkCompleted = async () => {
+  const handleClose = async () => {
     try {
-      await markCompleted.mutateAsync(requestId);
+      await closeRequest.mutateAsync(requestId);
+    } catch {
+      // shown via mutation state
+    }
+  };
+
+  const handleFulfill = async () => {
+    try {
+      await fulfillRequest.mutateAsync(requestId);
     } catch {
       // shown via mutation state
     }
@@ -35,6 +49,18 @@ export default function PrayerDetail() {
     }
   };
 
+  const handleAddComment = async () => {
+    const content = commentText.trim();
+    if (!content) return;
+
+    try {
+      await addComment.mutateAsync({ requestId, content });
+      setCommentText('');
+    } catch {
+      // shown via mutation state
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-24">
@@ -46,10 +72,13 @@ export default function PrayerDetail() {
   if (error || !request) {
     return (
       <div className="page-container">
-        <Link to="/requests" className="back-link">
-          <ArrowLeft size={16} />
-          Back to requests
-        </Link>
+         <Link
+        to="/requests"
+        className="btn-apple w-full py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2"
+      >
+        <ArrowLeft size={20} />
+        Back to requests
+      </Link>
         <div className="alert-error">Request not found.</div>
       </div>
     );
@@ -57,20 +86,47 @@ export default function PrayerDetail() {
 
   return (
     <div className="page-container">
-      <Link to="/requests" className="back-link">
-        <ArrowLeft size={16} />
+       <Link
+        to="/requests"
+        className="btn-apple w-full py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2"
+      >
+        <ArrowLeft size={20} />
         Back to requests
       </Link>
+      <br/>
 
       <div className="content-card">
         {request.isCompleted && (
           <div className="flex items-center gap-2 alert-info mb-5">
             <Sparkles size={20} className="text-[#9bada3] shrink-0" />
             <div>
-              <p className="font-medium text-neutral-100">Completed</p>
+              <p className="font-medium text-neutral-100">Closed</p>
               {request.completedDate && (
                 <p className="text-sm text-neutral-400">
-                  Completed on {format(new Date(request.completedDate), 'MMMM d, yyyy')}
+                  Closed on {format(new Date(request.completedDate), 'MMMM d, yyyy')}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!request.isCompleted && request.requestStatus === 'Fulfilled' && (
+          <div className="flex items-center gap-2 alert-info mb-5">
+            <CheckCircle size={20} className="text-[#9bada3] shrink-0" />
+            <div>
+              <p className="font-medium text-neutral-100">
+                {request.isOwnedByCurrentUser
+                  ? 'Assignee has completed their part'
+                  : 'You marked your part complete'}
+              </p>
+              {request.fulfilledDate && (
+                <p className="text-sm text-neutral-400">
+                  Completed on {format(new Date(request.fulfilledDate), 'MMMM d, yyyy')}
+                </p>
+              )}
+              {request.isOwnedByCurrentUser && (
+                <p className="text-sm text-neutral-400 mt-1">
+                  Review the request and close it when you are satisfied.
                 </p>
               )}
             </div>
@@ -101,53 +157,145 @@ export default function PrayerDetail() {
         )}
       </div>
 
-      <div className="mt-6 space-y-3">
-        {!request.isCompleted && (
+      <div className="content-card mt-6">
+        <div className="flex items-center gap-2 mb-4">
+          <MessageSquare size={18} className="text-[#9bada3]" />
+          <h2 className="font-semibold text-white">Comments</h2>
+        </div>
+
+        {commentsLoading && (
+          <div className="flex justify-center py-6">
+            <Loader2 className="animate-spin text-[#34C759]" size={24} />
+          </div>
+        )}
+
+        {!commentsLoading && comments.length === 0 && (
+          <p className="text-sm text-neutral-500 mb-4">No comments yet.</p>
+        )}
+
+        <ul className="space-y-3 mb-4">
+          {comments.map((comment) => (
+            <li
+              key={comment.id}
+              className={`rounded-xl border px-4 py-3 ${
+                comment.isOwnComment
+                  ? 'border-[#3d4a44] bg-[#2f3834]/40'
+                  : 'border-neutral-700 bg-neutral-800/30'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className="text-sm font-medium text-neutral-200">{comment.authorName}</span>
+                <span className="text-xs text-neutral-500">
+                  {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                </span>
+              </div>
+              <p className="text-sm text-neutral-300 whitespace-pre-wrap">{comment.content}</p>
+            </li>
+          ))}
+        </ul>
+
+        <div className="space-y-3">
+          <textarea
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Add a comment..."
+            rows={3}
+            maxLength={2000}
+            className="w-full rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-3 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:border-[#34C759] resize-y"
+          />
           <button
-            onClick={handleMarkCompleted}
-            disabled={markCompleted.isPending}
+            type="button"
+            onClick={handleAddComment}
+            disabled={addComment.isPending || !commentText.trim()}
+            className="btn-apple w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold disabled:opacity-50"
+          >
+            {addComment.isPending ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <Send size={18} />
+            )}
+            Post Comment
+          </button>
+          {addComment.isError && (
+            <p className="message-error text-center text-sm">Failed to post comment. Please try again.</p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-6 space-y-3">
+        {request.canFulfill && (
+          <button
+            onClick={handleFulfill}
+            disabled={fulfillRequest.isPending}
             className="btn-apple w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold disabled:opacity-50"
           >
-            {markCompleted.isPending ? (
+            {fulfillRequest.isPending ? (
               <Loader2 size={20} className="animate-spin" />
             ) : (
               <CheckCircle size={20} />
             )}
-            Mark as Completed
+            Mark My Part Complete
           </button>
         )}
 
-        {markCompleted.isError && (
-          <p className="message-error text-center">Failed to mark as completed. Please try again.</p>
+        {fulfillRequest.isError && (
+          <p className="message-error text-center">Failed to mark complete. Please try again.</p>
         )}
 
-        {!showDeleteConfirm ? (
+        {request.canClose && (
           <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="w-full flex items-center justify-center gap-2 text-red-400 py-3 rounded-xl font-medium border border-red-900/50 hover:bg-red-950/30 transition"
+            onClick={handleClose}
+            disabled={closeRequest.isPending}
+            className="btn-apple w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold disabled:opacity-50"
           >
-            <Trash2 size={18} />
-            Delete Request
+            {closeRequest.isPending ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : (
+              <Sparkles size={20} />
+            )}
+            Close Request
           </button>
-        ) : (
-          <div className="alert-error space-y-3">
-            <p className="text-center">Are you sure? This cannot be undone.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="filter-btn flex-1"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleteRequest.isPending}
-                className="flex-1 py-2 text-sm font-medium text-white bg-red-700 rounded-lg hover:bg-red-600 disabled:opacity-50 border border-red-600"
-              >
-                {deleteRequest.isPending ? 'Deleting...' : 'Delete'}
-              </button>
+        )}
+
+        {closeRequest.isError && (
+          <p className="message-error text-center">Failed to close request. Please try again.</p>
+        )}
+
+        {request.isOwnedByCurrentUser && !request.isCompleted && request.requestStatus !== 'Fulfilled' && (
+          <p className="text-sm text-neutral-500 text-center">
+            Waiting for the assignee to complete their part.
+          </p>
+        )}
+
+        {request.isOwnedByCurrentUser && (
+          !showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full flex items-center justify-center gap-2 text-red-400 py-3 rounded-xl font-medium border border-red-900/50 hover:bg-red-950/30 transition"
+            >
+              <Trash2 size={18} />
+              Delete Request
+            </button>
+          ) : (
+            <div className="alert-error space-y-3">
+              <p className="text-center">Are you sure? This cannot be undone.</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="filter-btn flex-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleteRequest.isPending}
+                  className="flex-1 py-2 text-sm font-medium text-white bg-red-700 rounded-lg hover:bg-red-600 disabled:opacity-50 border border-red-600"
+                >
+                  {deleteRequest.isPending ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
             </div>
-          </div>
+          )
         )}
       </div>
     </div>

@@ -29,6 +29,8 @@ public class Request
 
     public RequestStatus RequestStatus { get; set; } = RequestStatus.New;
 
+    public DateTime? FulfilledDate { get; set; }
+
     public string? RequesterEmail { get; set; }
 
     public string? VoiceNoteUrl { get; set; }
@@ -37,4 +39,5 @@ public class Request
     public int StreakDays { get; set; } = 0;
 
     public ICollection<ProgressNote> ProgressNotes { get; set; } = new List<ProgressNote>();
+    public ICollection<RequestComment> Comments { get; set; } = new List<RequestComment>();
 }

@@ -1,65 +1,105 @@
-import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Loader2 } from 'lucide-react';
-import { useRequests } from '@/hooks/useRequests';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Plus, Loader2, ArrowLeft } from 'lucide-react';
+import { useRequestInbox, type RequestScope } from '@/hooks/useRequests';
+import type { RequestResponseDto } from '@/services/requestService';
 import RequestCard from '@/components/RequestCard';
 
-type Filter = 'active' | 'completed';
+type Direction = RequestScope;
+type StatusFilter = 'active' | 'completed';
+
+function filterByStatus(requests: RequestResponseDto[], status: StatusFilter, direction: Direction) {
+  if (status === 'completed') {
+    if (direction === 'sent') {
+      return requests.filter((r) => r.isCompleted);
+    }
+    return requests.filter((r) => r.requestStatus === 'Fulfilled' || r.isCompleted);
+  }
+
+  if (direction === 'sent') {
+    return requests.filter((r) => !r.isCompleted);
+  }
+  return requests.filter((r) => !r.isCompleted && r.requestStatus !== 'Fulfilled');
+}
+
+function countByStatus(requests: RequestResponseDto[], status: StatusFilter, direction: Direction) {
+  return filterByStatus(requests, status, direction).length;
+}
 
 export default function PrayerList() {
-  const { data: requests = [], isLoading, error } = useRequests();
-  const [searchParams] = useSearchParams();
-  const scope = searchParams.get('scope');
-  const status = searchParams.get('status');
-  const isTeamOpenView = scope === 'team' && status === 'open';
+  const { sent, received, isLoading, error } = useRequestInbox();
+  const [direction, setDirection] = useState<Direction>('sent');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
 
-  const [filter, setFilter] = useState<Filter>('active');
+  const currentList = direction === 'sent' ? sent : received;
 
-  useEffect(() => {
-    if (status === 'open') {
-      setFilter('active');
-    }
-  }, [status]);
-
-  const filtered = requests.filter((r) =>
-    filter === 'active' ? !r.isCompleted : r.isCompleted
+  const filtered = useMemo(
+    () => filterByStatus(currentList, statusFilter, direction),
+    [currentList, statusFilter, direction],
   );
 
-  const pageTitle = isTeamOpenView ? 'Open Requests — My Team' : 'My Requests';
-  const activeLabel = isTeamOpenView ? 'Open' : 'Active';
+  const activeCount = countByStatus(currentList, 'active', direction);
+  const completedCount = countByStatus(currentList, 'completed', direction);
+
+  const emptyMessage =
+    statusFilter === 'active'
+      ? direction === 'sent'
+        ? 'No active sent requests yet.'
+        : 'No active received requests.'
+      : direction === 'sent'
+        ? 'No completed sent requests yet.'
+        : 'No completed received requests.';
 
   return (
     <div className="page-container">
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="page-title mb-0">{pageTitle}</h1>
-        <Link
-          to="/add"
-          className="flex items-center gap-1.5 btn-apple text-sm px-4 py-2 rounded-lg"
-        >
-          <Plus size={18} />
-          New
-        </Link>
-      </div>
-      <p className="page-subtitle">View and manage your submitted requests.</p>
+      <Link
+        to="/dashboard"
+        className="btn-apple w-full py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2"
+      >
+        <ArrowLeft size={20} />
+        Back to dashboard
+      </Link>
 
-      {isTeamOpenView && (
-        <div className="alert-info mb-6">
-          Team-wide filtering is coming soon. Showing your open requests for now.
-        </div>
-      )}
+      <div className="flex items-center justify-between mb-2 mt-4">
+        <h1 className="page-title mb-0">Requests</h1>
+      </div>
+      <p className="page-subtitle">
+        {direction === 'sent'
+          ? 'Requests you have submitted.'
+          : 'Requests assigned to your groups.'}
+      </p>
+
+      <div className="flex gap-2 mb-4">
+        <button
+          type="button"
+          onClick={() => setDirection('sent')}
+          className={`filter-btn tabular-nums${direction === 'sent' ? ' filter-btn-active' : ''}`}
+        >
+          Sent ({sent.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setDirection('received')}
+          className={`filter-btn tabular-nums${direction === 'received' ? ' filter-btn-active' : ''}`}
+        >
+          Received ({received.length})
+        </button>
+      </div>
 
       <div className="flex gap-2 mb-6">
         <button
-          onClick={() => setFilter('active')}
-          className={filter === 'active' ? 'filter-btn-active' : 'filter-btn'}
+          type="button"
+          onClick={() => setStatusFilter('active')}
+          className={`filter-btn tabular-nums${statusFilter === 'active' ? ' filter-btn-active' : ''}`}
         >
-          {activeLabel} ({requests.filter((r) => !r.isCompleted).length})
+          Active ({activeCount})
         </button>
         <button
-          onClick={() => setFilter('completed')}
-          className={filter === 'completed' ? 'filter-btn-active' : 'filter-btn'}
+          type="button"
+          onClick={() => setStatusFilter('completed')}
+          className={`filter-btn tabular-nums${statusFilter === 'completed' ? ' filter-btn-active' : ''}`}
         >
-          Completed ({requests.filter((r) => r.isCompleted).length})
+          Completed ({completedCount})
         </button>
       </div>
 
@@ -75,25 +115,24 @@ export default function PrayerList() {
 
       {!isLoading && !error && filtered.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-neutral-400 mb-4">
-            {filter === 'active'
-              ? 'No open requests yet.'
-              : 'No completed requests yet.'}
-          </p>
-          {filter === 'active' && (
-            <Link to="/add" className="inline-flex items-center gap-2 link-accent">
-              <Plus size={18} />
-              Create your first request
-            </Link>
-          )}
+          <p className="text-neutral-400 mb-4">{emptyMessage}</p>
         </div>
       )}
 
       <div className="space-y-3">
         {filtered.map((request) => (
-          <RequestCard key={request.id} request={request} />
+          <RequestCard key={request.id} request={request} direction={direction} />
         ))}
       </div>
+
+      <br />
+      <Link
+        to="/add"
+        className="btn-apple w-full py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2"
+      >
+        <Plus size={20} />
+        New
+      </Link>
     </div>
   );
 }
