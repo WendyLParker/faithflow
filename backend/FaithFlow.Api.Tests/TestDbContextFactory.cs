@@ -36,4 +36,7 @@ internal static class TestDbContextFactory
     }
 
     public static RequestService CreateRequestService(ApplicationDbContext context) => new(context);
+
+    public static RequestCommentService CreateRequestCommentService(ApplicationDbContext context) =>
+        new(context, CreateRequestService(context));
 }

@@ -7,4 +7,10 @@ public enum NotificationType
 
     /// <summary>Sent to the original requester when a group member acknowledges their request.</summary>
     RequestAcknowledged = 1,
+
+    /// <summary>Sent to the requestor when an assignee marks their part complete.</summary>
+    RequestFulfilled = 2,
+
+    /// <summary>Sent when someone adds a comment on a request (to the requestor or assignee).</summary>
+    RequestComment = 3,
 }

@@ -1,15 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userRoleService, type SetUserRoleDto, type UpdateProfileDto } from '@/services/userRoleService';
+import { useAuth } from '@/hooks/useAuth';
 
 export const userRoleKeys = {
-  mine: ['userRole', 'mine'] as const,
+  mine: (userId?: string) => ['userRole', 'mine', userId] as const,
   all: ['userRole', 'all'] as const,
 };
 
 export function useMyRole() {
+  const { isLoggedIn, user } = useAuth();
+
   return useQuery({
-    queryKey: userRoleKeys.mine,
+    queryKey: userRoleKeys.mine(user?.sub),
     queryFn: userRoleService.getMine,
+    enabled: isLoggedIn,
   });
 }
 
@@ -27,7 +31,7 @@ export function useSetUserRole() {
     mutationFn: (data: SetUserRoleDto) => userRoleService.setRole(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userRoleKeys.all });
-      queryClient.invalidateQueries({ queryKey: userRoleKeys.mine });
+      queryClient.invalidateQueries({ queryKey: ['userRole', 'mine'] });
     },
   });
 }
@@ -37,7 +41,7 @@ export function useUpdateMyProfile() {
   return useMutation({
     mutationFn: (data: UpdateProfileDto) => userRoleService.updateMyProfile(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: userRoleKeys.mine });
+      queryClient.invalidateQueries({ queryKey: ['userRole', 'mine'] });
     },
   });
 }

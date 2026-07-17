@@ -19,6 +19,7 @@ public class NotificationService : INotificationRepository
         return await _context.Notifications
             .Include(n => n.Request)
                 .ThenInclude(r => r.RequestType)
+            .Include(n => n.Comment)
             .Where(n => n.RecipientUserId == userId && !n.IsRead)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
@@ -35,6 +36,7 @@ public class NotificationService : INotificationRepository
         return await _context.Notifications
             .Include(n => n.Request)
                 .ThenInclude(r => r.RequestType)
+            .Include(n => n.Comment)
             .FirstOrDefaultAsync(n => n.Id == id);
     }
 

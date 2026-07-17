@@ -164,7 +164,101 @@ public class RequestServiceTests
     }
 
     [Fact]
-    public async Task DeleteAsync_ReturnsFalse_WhenUserDoesNotOwnRequest()
+    public async Task GetReceivedByUserAsync_ReturnsRequestsAssignedToUsersGroups()
+    {
+        await using var context = TestDbContextFactory.CreateContext();
+        var service = TestDbContextFactory.CreateRequestService(context);
+
+        context.Groups.Add(new Group { Id = 10, Name = "Test Group" });
+        context.UserGroups.Add(new UserGroup
+        {
+            UserId = UserB,
+            GroupId = 10,
+            DisplayName = "Member B",
+            UserEmail = "b@test.com",
+        });
+        await context.SaveChangesAsync();
+
+        var created = await service.AddAsync(new Request
+        {
+            UserId = UserA,
+            Title = "Assigned request",
+            RequestTypeId = 2,
+        });
+        await service.SetAssignedGroupsAsync(created.Id, new[] { 10 });
+
+        var received = (await service.GetReceivedByUserAsync(UserB)).ToList();
+        var sentForB = (await service.GetAllByUserAsync(UserB)).ToList();
+
+        Assert.Single(received);
+        Assert.Equal("Assigned request", received[0].Title);
+        Assert.Empty(sentForB);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ReturnsReceivedRequest_ForGroupMember()
+    {
+        await using var context = TestDbContextFactory.CreateContext();
+        var service = TestDbContextFactory.CreateRequestService(context);
+
+        context.Groups.Add(new Group { Id = 10, Name = "Test Group" });
+        context.UserGroups.Add(new UserGroup
+        {
+            UserId = UserB,
+            GroupId = 10,
+            DisplayName = "Member B",
+            UserEmail = "b@test.com",
+        });
+        await context.SaveChangesAsync();
+
+        var created = await service.AddAsync(new Request
+        {
+            UserId = UserA,
+            Title = "Shared request",
+            RequestTypeId = 2,
+        });
+        await service.SetAssignedGroupsAsync(created.Id, new[] { 10 });
+
+        var result = await service.GetByIdAsync(created.Id, UserB);
+
+        Assert.NotNull(result);
+        Assert.Equal("Shared request", result.Title);
+    }
+
+    [Fact]
+    public async Task MarkFulfilledAsync_SetsStatusAndDate_ForGroupMember()
+    {
+        await using var context = TestDbContextFactory.CreateContext();
+        var service = TestDbContextFactory.CreateRequestService(context);
+
+        context.Groups.Add(new Group { Id = 10, Name = "Test Group" });
+        context.UserGroups.Add(new UserGroup
+        {
+            UserId = UserB,
+            GroupId = 10,
+            DisplayName = "Member B",
+            UserEmail = "b@test.com",
+        });
+        await context.SaveChangesAsync();
+
+        var created = await service.AddAsync(new Request
+        {
+            UserId = UserA,
+            Title = "Needs fulfillment",
+            RequestTypeId = 2,
+            RequestStatus = RequestStatus.Acknowledged,
+        });
+        await service.SetAssignedGroupsAsync(created.Id, new[] { 10 });
+
+        var fulfilled = await service.MarkFulfilledAsync(created.Id, UserB);
+
+        Assert.NotNull(fulfilled);
+        Assert.Equal(RequestStatus.Fulfilled, fulfilled.RequestStatus);
+        Assert.NotNull(fulfilled.FulfilledDate);
+    }
+
+    [Fact]
+    public async Task MarkFulfilledAsync_ReturnsNull_WhenUserIsOwner()
     {
         await using var context = TestDbContextFactory.CreateContext();
         var service = TestDbContextFactory.CreateRequestService(context);
@@ -172,13 +266,53 @@ public class RequestServiceTests
         var created = await service.AddAsync(new Request
         {
             UserId = UserA,
-            Title = "Not yours to delete",
+            Title = "Own request",
             RequestTypeId = 2,
         });
 
-        var deleted = await service.DeleteAsync(created.Id, UserB);
+        var result = await service.MarkFulfilledAsync(created.Id, UserA);
 
-        Assert.False(deleted);
-        Assert.NotNull(await context.Requests.FindAsync(created.Id));
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task CloseAsync_SetsCompleted_WhenOwnerAndFulfilled()
+    {
+        await using var context = TestDbContextFactory.CreateContext();
+        var service = TestDbContextFactory.CreateRequestService(context);
+
+        var created = await service.AddAsync(new Request
+        {
+            UserId = UserA,
+            Title = "Ready to close",
+            RequestTypeId = 2,
+            RequestStatus = RequestStatus.Fulfilled,
+            FulfilledDate = DateTime.UtcNow,
+        });
+
+        var closed = await service.CloseAsync(created.Id, UserA);
+
+        Assert.NotNull(closed);
+        Assert.True(closed.IsCompleted);
+        Assert.NotNull(closed.CompletedDate);
+    }
+
+    [Fact]
+    public async Task CloseAsync_ReturnsNull_WhenNotFulfilled()
+    {
+        await using var context = TestDbContextFactory.CreateContext();
+        var service = TestDbContextFactory.CreateRequestService(context);
+
+        var created = await service.AddAsync(new Request
+        {
+            UserId = UserA,
+            Title = "Still open",
+            RequestTypeId = 2,
+            RequestStatus = RequestStatus.New,
+        });
+
+        var result = await service.CloseAsync(created.Id, UserA);
+
+        Assert.Null(result);
     }
 }

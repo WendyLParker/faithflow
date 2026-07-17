@@ -14,15 +14,18 @@ public class NotificationController : ControllerBase
 {
     private readonly INotificationRepository _notifications;
     private readonly IRequestRepository _requests;
+    private readonly IRequestCommentRepository _comments;
     private readonly IEmailService _email;
 
     public NotificationController(
         INotificationRepository notifications,
         IRequestRepository requests,
+        IRequestCommentRepository comments,
         IEmailService email)
     {
         _notifications = notifications;
         _requests = requests;
+        _comments = comments;
         _email = email;
     }
 
@@ -33,7 +36,10 @@ public class NotificationController : ControllerBase
     {
         var userId = GetCurrentUserId();
         var notifications = await _notifications.GetForUserAsync(userId);
-        return Ok(notifications.Select(ToDto));
+        var dtos = new List<NotificationDto>();
+        foreach (var notification in notifications)
+            dtos.Add(await ToDtoAsync(notification));
+        return Ok(dtos);
     }
 
     [HttpGet("unread-count")]
@@ -104,16 +110,25 @@ public class NotificationController : ControllerBase
         return NoContent();
     }
 
-    private static NotificationDto ToDto(Notification n) => new()
+    private async Task<NotificationDto> ToDtoAsync(Notification n)
     {
-        Id = n.Id,
-        Type = n.Type.ToString(),
-        IsRead = n.IsRead,
-        CreatedAt = n.CreatedAt,
-        RequestId = n.RequestId,
-        RequestTitle = n.Request?.Title ?? string.Empty,
-        RequestContent = n.Request?.Content,
-        RequestTypeName = n.Request?.RequestType?.Name ?? string.Empty,
-        RequestStatus = n.Request?.RequestStatus.ToString() ?? string.Empty,
-    };
+        string? commentAuthorName = null;
+        if (n.Comment != null)
+            commentAuthorName = await _comments.ResolveDisplayNameAsync(n.Comment.UserId);
+
+        return new NotificationDto
+        {
+            Id = n.Id,
+            Type = n.Type.ToString(),
+            IsRead = n.IsRead,
+            CreatedAt = n.CreatedAt,
+            RequestId = n.RequestId,
+            RequestTitle = n.Request?.Title ?? string.Empty,
+            RequestContent = n.Request?.Content,
+            RequestTypeName = n.Request?.RequestType?.Name ?? string.Empty,
+            RequestStatus = n.Request?.RequestStatus.ToString() ?? string.Empty,
+            CommentContent = n.Comment?.Content,
+            CommentAuthorName = commentAuthorName,
+        };
+    }
 }

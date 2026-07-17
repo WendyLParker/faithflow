@@ -23,6 +23,7 @@ builder.Services.AddHealthChecks();
 
 // Register services
 builder.Services.AddScoped<IProgressNoteRepository, ProgressNoteService>();
+builder.Services.AddScoped<IRequestCommentRepository, RequestCommentService>();
 builder.Services.AddScoped<IRequestRepository, RequestService>();
 builder.Services.AddScoped<IRequestTypeRepository, RequestTypeService>();
 builder.Services.AddScoped<IGroupRepository, GroupService>();
@@ -105,25 +106,39 @@ builder.Services.AddSingleton<IAmazonCognitoIdentityProvider>(sp =>
 builder.Services.AddAuthorization();
 
 // ====================== CORS ======================
-var allowedOrigins = builder.Configuration
+var configuredOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
     .Get<string[]>() ?? [];
+
+var allowedOrigins = configuredOrigins.ToList();
+if (builder.Environment.IsDevelopment())
+{
+    foreach (var origin in new[] { "http://localhost:5173", "http://127.0.0.1:5173" })
+    {
+        if (!allowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
+            allowedOrigins.Add(origin);
+    }
+}
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        if (allowedOrigins.Length > 0)
+        policy.AllowAnyHeader().AllowAnyMethod();
+
+        if (allowedOrigins.Count > 0)
         {
-            policy.WithOrigins(allowedOrigins)
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
+            policy.WithOrigins(allowedOrigins.ToArray());
         }
         else if (builder.Environment.IsDevelopment())
         {
-            policy.AllowAnyOrigin()
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
+            policy.SetIsOriginAllowed(origin =>
+            {
+                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                    return false;
+
+                return uri.Host is "localhost" or "127.0.0.1";
+            });
         }
     });
 });

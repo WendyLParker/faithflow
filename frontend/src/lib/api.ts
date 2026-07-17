@@ -2,7 +2,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '@/config';
 
 const api = axios.create({
-  baseURL: API_BASE_URL ?? 'http://localhost:5000',
+  baseURL: API_BASE_URL ?? 'http://localhost:5001',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -20,7 +20,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && localStorage.getItem('accessToken')) {
       window.dispatchEvent(new Event('auth:unauthorized'));
     }
     return Promise.reject(error);

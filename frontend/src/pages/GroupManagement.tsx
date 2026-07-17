@@ -55,8 +55,11 @@ export default function GroupManagement() {
 
   return (
     <div className="page-container">
-      <Link to="/dashboard" className="back-link">
-        <ArrowLeft size={16} />
+       <Link
+        to="/dashboard"
+        className="btn-apple w-full py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2"
+      >
+        <ArrowLeft size={20} />
         Back to dashboard
       </Link>
 

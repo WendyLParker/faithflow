@@ -2,7 +2,7 @@ import api from '@/lib/api';
 
 export interface NotificationDto {
   id: number;
-  type: 'NewRequest' | 'RequestAcknowledged';
+  type: 'NewRequest' | 'RequestAcknowledged' | 'RequestFulfilled' | 'RequestComment';
   isRead: boolean;
   createdAt: string;
   requestId: number;
@@ -10,6 +10,8 @@ export interface NotificationDto {
   requestContent?: string;
   requestTypeName: string;
   requestStatus: string;
+  commentContent?: string;
+  commentAuthorName?: string;
 }
 
 export interface GroupDto {

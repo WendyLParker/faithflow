@@ -11,6 +11,7 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<Request> Requests { get; set; }
+    public DbSet<RequestComment> RequestComments { get; set; }
     public DbSet<ProgressNote> ProgressNotes { get; set; }
     public DbSet<RequestType> RequestTypes { get; set; }
     public DbSet<Group> Groups { get; set; }
@@ -28,6 +29,18 @@ public class ApplicationDbContext : DbContext
             .WithMany(r => r.ProgressNotes)
             .HasForeignKey(pn => pn.RequestId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RequestComment>()
+            .HasOne(c => c.Request)
+            .WithMany(r => r.Comments)
+            .HasForeignKey(c => c.RequestId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Notification>()
+            .HasOne(n => n.Comment)
+            .WithMany()
+            .HasForeignKey(n => n.CommentId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Request>()
             .HasOne(r => r.RequestType)

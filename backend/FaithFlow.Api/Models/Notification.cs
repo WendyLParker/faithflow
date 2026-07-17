@@ -11,6 +11,9 @@ public class Notification
 
     public NotificationType Type { get; set; }
 
+    public int? CommentId { get; set; }
+    public RequestComment? Comment { get; set; }
+
     public bool IsRead { get; set; } = false;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

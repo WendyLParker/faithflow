@@ -3,6 +3,7 @@ using System;
 using FaithFlow.Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FaithFlow.Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260717160955_AddRequestFulfilledDate")]
+    partial class AddRequestFulfilledDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
@@ -69,9 +72,6 @@ namespace FaithFlow.Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("CommentId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -89,8 +89,6 @@ namespace FaithFlow.Backend.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CommentId");
 
                     b.HasIndex("RequestId");
 
@@ -181,34 +179,6 @@ namespace FaithFlow.Backend.Migrations
                     b.HasIndex("RequestTypeId");
 
                     b.ToTable("Requests");
-                });
-
-            modelBuilder.Entity("FaithFlow.Backend.Models.RequestComment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("RequestId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RequestId");
-
-                    b.ToTable("RequestComments");
                 });
 
             modelBuilder.Entity("FaithFlow.Backend.Models.RequestGroup", b =>
@@ -345,18 +315,11 @@ namespace FaithFlow.Backend.Migrations
 
             modelBuilder.Entity("FaithFlow.Backend.Models.Notification", b =>
                 {
-                    b.HasOne("FaithFlow.Backend.Models.RequestComment", "Comment")
-                        .WithMany()
-                        .HasForeignKey("CommentId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("FaithFlow.Backend.Models.Request", "Request")
                         .WithMany()
                         .HasForeignKey("RequestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Comment");
 
                     b.Navigation("Request");
                 });
@@ -381,17 +344,6 @@ namespace FaithFlow.Backend.Migrations
                         .IsRequired();
 
                     b.Navigation("RequestType");
-                });
-
-            modelBuilder.Entity("FaithFlow.Backend.Models.RequestComment", b =>
-                {
-                    b.HasOne("FaithFlow.Backend.Models.Request", "Request")
-                        .WithMany("Comments")
-                        .HasForeignKey("RequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Request");
                 });
 
             modelBuilder.Entity("FaithFlow.Backend.Models.RequestGroup", b =>
@@ -432,8 +384,6 @@ namespace FaithFlow.Backend.Migrations
             modelBuilder.Entity("FaithFlow.Backend.Models.Request", b =>
                 {
                     b.Navigation("AssignedGroups");
-
-                    b.Navigation("Comments");
 
                     b.Navigation("ProgressNotes");
                 });

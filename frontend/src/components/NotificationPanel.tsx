@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { X, CheckCircle, BellOff, Loader2, Bell } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useNotifications, useAcknowledgeNotification, useDismissNotification } from '@/hooks/useNotifications';
 import type { NotificationDto } from '@/services/notificationService';
 import { formatDistanceToNow } from 'date-fns';
@@ -116,6 +117,16 @@ function NotificationCard({
 }) {
   const timeAgo = formatDistanceToNow(new Date(n.createdAt), { addSuffix: true });
   const isNewRequest = n.type === 'NewRequest';
+  const isFulfilled = n.type === 'RequestFulfilled';
+  const isComment = n.type === 'RequestComment';
+
+  const typeLabel = isNewRequest
+    ? `New ${n.requestTypeName} Request`
+    : isFulfilled
+      ? 'Request Part Complete'
+      : isComment
+        ? 'New Comment'
+        : 'Request Acknowledged';
 
   return (
     <div className="px-4 py-4 hover:bg-neutral-800/50 transition-colors">
@@ -128,7 +139,7 @@ function NotificationCard({
               : 'bg-[#2f3834] text-[#9bada3] border border-[#3d4a44]'
           }`}
         >
-          {isNewRequest ? `New ${n.requestTypeName} Request` : 'Request Acknowledged'}
+          {typeLabel}
         </span>
         <span className="text-xs text-neutral-500">{timeAgo}</span>
       </div>
@@ -137,8 +148,17 @@ function NotificationCard({
       <p className="text-sm font-semibold text-neutral-100 mb-1 leading-snug">{n.requestTitle}</p>
 
       {/* Preview */}
-      {n.requestContent && (
-        <p className="text-xs text-neutral-400 line-clamp-2 mb-3">{n.requestContent}</p>
+      {isComment && n.commentContent ? (
+        <p className="text-xs text-neutral-400 line-clamp-3 mb-3">
+          {n.commentAuthorName && (
+            <span className="text-neutral-300">{n.commentAuthorName}: </span>
+          )}
+          {n.commentContent}
+        </p>
+      ) : (
+        n.requestContent && (
+          <p className="text-xs text-neutral-400 line-clamp-2 mb-3">{n.requestContent}</p>
+        )
       )}
 
       {/* Status pill */}
@@ -161,6 +181,22 @@ function NotificationCard({
             )}
             Acknowledge
           </button>
+        ) : isFulfilled ? (
+          <Link
+            to={`/requests/${n.requestId}`}
+            onClick={onDismiss}
+            className="inline-flex items-center gap-1.5 btn-apple text-xs px-3 py-1.5 rounded-lg font-medium"
+          >
+            View & close
+          </Link>
+        ) : isComment ? (
+          <Link
+            to={`/requests/${n.requestId}`}
+            onClick={onDismiss}
+            className="inline-flex items-center gap-1.5 btn-apple text-xs px-3 py-1.5 rounded-lg font-medium"
+          >
+            View request
+          </Link>
         ) : (
           <button
             type="button"
