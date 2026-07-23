@@ -16,6 +16,21 @@ namespace FaithFlow.Backend.Migrations
                 table: "Requests",
                 type: "TEXT",
                 nullable: true);
+
+            if (migrationBuilder.ActiveProvider == "Npgsql.EntityFrameworkCore.PostgreSQL")
+            {
+                migrationBuilder.Sql(
+                    """
+                    ALTER TABLE "Requests"
+                        ALTER COLUMN "FulfilledDate" TYPE timestamp with time zone
+                        USING (
+                            CASE
+                                WHEN "FulfilledDate" IS NULL OR btrim("FulfilledDate") = '' THEN NULL
+                                ELSE "FulfilledDate"::timestamp with time zone
+                            END
+                        );
+                    """);
+            }
         }
 
         /// <inheritdoc />

@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -22,6 +23,7 @@ namespace FaithFlow.Backend.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                         .Annotation("Sqlite:Autoincrement", true),
                     RequestId = table.Column<int>(type: "INTEGER", nullable: false),
                     UserId = table.Column<string>(type: "TEXT", nullable: false),
@@ -56,6 +58,16 @@ namespace FaithFlow.Backend.Migrations
                 principalTable: "RequestComments",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.SetNull);
+
+            if (migrationBuilder.ActiveProvider == "Npgsql.EntityFrameworkCore.PostgreSQL")
+            {
+                migrationBuilder.Sql(
+                    """
+                    ALTER TABLE "RequestComments"
+                        ALTER COLUMN "CreatedAt" TYPE timestamp with time zone
+                        USING ("CreatedAt"::timestamp with time zone);
+                    """);
+            }
         }
 
         /// <inheritdoc />
