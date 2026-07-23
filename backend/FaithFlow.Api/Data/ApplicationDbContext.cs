@@ -83,6 +83,10 @@ public class ApplicationDbContext : DbContext
             .Property(ur => ur.Id)
             .ValueGeneratedOnAdd();
 
+        modelBuilder.Entity<RequestComment>()
+            .Property(c => c.Id)
+            .ValueGeneratedOnAdd();
+
         modelBuilder.Entity<UserRole>()
             .HasIndex(ur => ur.UserId)
             .IsUnique();
