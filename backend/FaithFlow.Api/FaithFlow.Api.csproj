@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <!-- Core Packages -->
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.100.6" />
     <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.10.1" />
     <PackageReference Include="AWSSDK.SSO" Version="4.0.3.8" />
     <PackageReference Include="AWSSDK.SSOOIDC" Version="4.0.4.10" />

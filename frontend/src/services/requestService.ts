@@ -17,6 +17,21 @@ export interface RequestUpdateDto {
   isCompleted?: boolean;
 }
 
+export interface CostEstimateRequestDto {
+  requestType: string;
+  title: string;
+  description: string;
+}
+
+export interface CostEstimateResponseDto {
+  low_estimate: number;
+  most_likely: number;
+  high_estimate: number;
+  currency: string;
+  confidence: 'low' | 'medium' | 'high';
+  reasoning: string;
+}
+
 export type RequestScope = 'sent' | 'received';
 
 export interface RequestResponseDto {
@@ -78,6 +93,14 @@ export const requestService = {
 
   async close(id: number) {
     const response = await api.post<RequestResponseDto>(`/api/request/${id}/close`);
+    return response.data;
+  },
+
+  async estimateCost(data: CostEstimateRequestDto) {
+    const response = await api.post<CostEstimateResponseDto>(
+      '/api/requests/estimate-cost',
+      data,
+    );
     return response.data;
   },
 

@@ -8,6 +8,7 @@ using FaithFlow.Backend.Common;
 using FluentValidation;
 using FaithFlow.Backend.DTOs.Validators;
 using Amazon.CognitoIdentityProvider;
+using Amazon.BedrockRuntime;
 using Microsoft.Extensions.Options;
 using Amazon;
 
@@ -102,6 +103,22 @@ builder.Services.AddSingleton<IAmazonCognitoIdentityProvider>(sp =>
         RegionEndpoint.GetBySystemName(settings.Region)
     );
 });
+
+// ====================== Bedrock (AI cost estimation) ======================
+builder.Services.Configure<BedrockSettings>(builder.Configuration.GetSection("Bedrock"));
+
+builder.Services.AddSingleton<IAmazonBedrockRuntime>(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<BedrockSettings>>().Value;
+
+    return new AmazonBedrockRuntimeClient(
+        new AmazonBedrockRuntimeConfig
+        {
+            RegionEndpoint = RegionEndpoint.GetBySystemName(settings.Region),
+        });
+});
+
+builder.Services.AddScoped<ICostEstimationService, BedrockCostEstimationService>();
 
 builder.Services.AddAuthorization();
 

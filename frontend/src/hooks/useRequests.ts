@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   requestService,
+  type CostEstimateRequestDto,
   type RequestCreateDto,
   type RequestScope,
   type RequestUpdateDto,
@@ -118,6 +119,12 @@ export function useFulfillRequest() {
 
 export function useCloseRequest() {
   return useMarkRequestCompleted();
+}
+
+export function useEstimateCost() {
+  return useMutation({
+    mutationFn: (data: CostEstimateRequestDto) => requestService.estimateCost(data),
+  });
 }
 
 export type { RequestScope };

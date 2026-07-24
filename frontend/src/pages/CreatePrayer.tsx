@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Loader2, ArrowLeft } from 'lucide-react';
-import { useCreateRequest } from '@/hooks/useRequests';
+import { Loader2, ArrowLeft, Sparkles } from 'lucide-react';
+import { useCreateRequest, useEstimateCost } from '@/hooks/useRequests';
 import { useRequestTypes } from '@/hooks/useRequestTypes';
 import { useGroups } from '@/hooks/useGroups';
 
 export default function CreatePrayer() {
   const navigate = useNavigate();
   const createRequest = useCreateRequest();
+  const estimateCost = useEstimateCost();
   const { data: requestTypes = [], isLoading: typesLoading } = useRequestTypes();
   const { data: groups = [], isLoading: groupsLoading } = useGroups();
 
@@ -17,6 +18,30 @@ export default function CreatePrayer() {
   const [requestTypeId, setRequestTypeId] = useState<number | null>(null);
 
   const hasGroups = groups.length > 0;
+  const selectedType = requestTypes.find((t) => t.id === requestTypeId);
+  const canEstimate =
+    !!selectedType && title.trim().length > 0 && !estimateCost.isPending;
+
+  const handleEstimate = async () => {
+    if (!selectedType) return;
+    try {
+      await estimateCost.mutateAsync({
+        requestType: selectedType.name,
+        title: title.trim(),
+        description: content.trim(),
+      });
+    } catch {
+      // error shown below
+    }
+  };
+
+  const estimate = estimateCost.data;
+  const currencyFmt = (value: number) =>
+    new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: estimate?.currency || 'USD',
+      maximumFractionDigits: 0,
+    }).format(value);
 
   const toggleGroup = (groupId: number) => {
     setSelectedGroupIds((prev) =>
@@ -111,6 +136,71 @@ export default function CreatePrayer() {
             maxLength={2000}
             className="form-input resize-none"
           />
+        </div>
+
+        <div>
+          <button
+            type="button"
+            onClick={handleEstimate}
+            disabled={!canEstimate}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium border border-[#3d4a44] text-[#9bada3] hover:bg-[#2f3834]/40 transition disabled:opacity-50"
+          >
+            {estimateCost.isPending ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <Sparkles size={18} />
+            )}
+            Estimate Cost
+          </button>
+          <p className="text-xs text-neutral-500 mt-1.5">
+            Optional AI estimate. Select a request type and enter a title first.
+          </p>
+
+          {estimateCost.isError && (
+            <p className="message-error mt-3">
+              Couldn&apos;t generate an estimate right now. Please try again.
+            </p>
+          )}
+
+          {estimate && (
+            <div className="content-card mt-3 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-[#9bada3]" />
+                  <span className="font-semibold text-white">Estimated cost</span>
+                </div>
+                <span className="badge capitalize">{estimate.confidence} confidence</span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-xl border border-neutral-700 bg-neutral-800/30 py-2">
+                  <p className="text-xs text-neutral-500">Low</p>
+                  <p className="text-sm font-semibold text-neutral-200">
+                    {currencyFmt(estimate.low_estimate)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-[#3d4a44] bg-[#2f3834]/40 py-2">
+                  <p className="text-xs text-neutral-400">Most likely</p>
+                  <p className="text-sm font-bold text-white">
+                    {currencyFmt(estimate.most_likely)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-neutral-700 bg-neutral-800/30 py-2">
+                  <p className="text-xs text-neutral-500">High</p>
+                  <p className="text-sm font-semibold text-neutral-200">
+                    {currencyFmt(estimate.high_estimate)}
+                  </p>
+                </div>
+              </div>
+
+              {estimate.reasoning && (
+                <p className="text-sm text-neutral-400">{estimate.reasoning}</p>
+              )}
+              <p className="text-xs text-neutral-600">
+                AI-generated estimate. Actual costs may vary.
+              </p>
+            </div>
+          )}
         </div>
 
         {hasGroups && (
