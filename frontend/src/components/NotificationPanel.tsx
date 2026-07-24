@@ -44,9 +44,9 @@ export default function NotificationPanel({ open, onClose }: Props) {
         <div className="flex items-center justify-between px-4 py-4 border-b border-neutral-700">
           <div className="flex items-center gap-2">
             <Bell size={18} className="text-neutral-400" />
-            <h2 className="font-semibold text-white">Notifications</h2>
+            <h2 className="font-semibold text-[var(--ink)]">Notifications</h2>
             {notifications.length > 0 && (
-              <span className="text-xs bg-[#34C759] text-black font-bold px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-[#9e1b32] text-white font-bold px-2 py-0.5 rounded-full">
                 {notifications.length}
               </span>
             )}
@@ -55,7 +55,7 @@ export default function NotificationPanel({ open, onClose }: Props) {
             type="button"
             onClick={onClose}
             aria-label="Close panel"
-            className="p-1.5 text-neutral-400 hover:text-white transition-colors rounded-lg hover:bg-neutral-800"
+            className="p-1.5 text-neutral-400 hover:text-[var(--ink)] transition-colors rounded-lg hover:bg-neutral-800"
           >
             <X size={20} />
           </button>
@@ -65,7 +65,7 @@ export default function NotificationPanel({ open, onClose }: Props) {
         <div className="flex-1 overflow-y-auto">
           {isLoading && (
             <div className="flex justify-center py-16">
-              <Loader2 className="animate-spin text-[#34C759]" size={28} />
+              <Loader2 className="animate-spin text-[#9e1b32]" size={28} />
             </div>
           )}
 
@@ -135,8 +135,8 @@ function NotificationCard({
         <span
           className={`text-xs font-medium px-2 py-0.5 rounded-full ${
             isNewRequest
-              ? 'bg-amber-950/60 text-amber-400 border border-amber-800/50'
-              : 'bg-[#2f3834] text-[#9bada3] border border-[#3d4a44]'
+              ? 'bg-amber-100 text-amber-800 border border-amber-300'
+              : 'bg-[#9e1b32]/10 text-[#9e1b32] border border-[#9e1b32]/30'
           }`}
         >
           {typeLabel}
@@ -202,7 +202,7 @@ function NotificationCard({
             type="button"
             onClick={onDismiss}
             disabled={isActing}
-            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium text-neutral-400 hover:text-white border border-neutral-700 hover:border-neutral-500 transition disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium text-neutral-400 hover:text-[var(--ink)] border border-neutral-700 hover:border-neutral-500 transition disabled:opacity-50"
           >
             {isActing ? <Loader2 size={12} className="animate-spin" /> : 'Dismiss'}
           </button>

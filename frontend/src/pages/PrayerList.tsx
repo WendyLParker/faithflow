@@ -105,7 +105,7 @@ export default function PrayerList() {
 
       {isLoading && (
         <div className="flex justify-center py-16">
-          <Loader2 className="animate-spin text-[#34C759]" size={32} />
+          <Loader2 className="animate-spin text-[#9e1b32]" size={32} />
         </div>
       )}
 

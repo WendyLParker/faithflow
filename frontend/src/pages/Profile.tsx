@@ -29,7 +29,7 @@ export default function Profile() {
   useEffect(() => {
     if (myRole) {
       setDisplayName(myRole.displayName ?? '');
-      setSelectedColor(myRole.profileColor ?? '#34c759');
+      setSelectedColor(myRole.profileColor ?? '#9e1b32');
     }
   }, [myRole]);
 
@@ -53,13 +53,13 @@ export default function Profile() {
     return (
       <div className="page-container">
         <div className="flex justify-center py-20">
-          <Loader2 className="animate-spin text-[#34C759]" size={32} />
+          <Loader2 className="animate-spin text-[#9e1b32]" size={32} />
         </div>
       </div>
     );
   }
 
-  const avatarColor = selectedColor || myRole?.profileColor || '#34c759';
+  const avatarColor = selectedColor || myRole?.profileColor || '#9e1b32';
   const initials =
     (displayName || user?.email || '?')
       .replace(/@.*/, '')
@@ -115,7 +115,7 @@ export default function Profile() {
                 type="button"
                 aria-label={color.label}
                 onClick={() => setSelectedColor(color.value)}
-                className="relative w-9 h-9 rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/50"
+                className="relative w-9 h-9 rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-black/40"
                 style={{ backgroundColor: color.value }}
               >
                 {selectedColor === color.value && (

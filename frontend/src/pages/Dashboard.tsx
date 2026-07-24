@@ -24,7 +24,7 @@ export default function Dashboard() {
 
       <nav
         aria-label="Dashboard actions"
-        className="grid grid-cols-2 gap-3 sm:gap-4 max-w-md mx-auto"
+        className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4"
       >
         {visibleActions.map((action) => (
           <ActionCard key={action.id} action={action} />

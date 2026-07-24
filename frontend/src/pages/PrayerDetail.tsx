@@ -64,7 +64,7 @@ export default function PrayerDetail() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-24">
-        <Loader2 className="animate-spin text-[#34C759]" size={32} />
+        <Loader2 className="animate-spin text-[#9e1b32]" size={32} />
       </div>
     );
   }
@@ -98,7 +98,7 @@ export default function PrayerDetail() {
       <div className="content-card">
         {request.isCompleted && (
           <div className="flex items-center gap-2 alert-info mb-5">
-            <Sparkles size={20} className="text-[#9bada3] shrink-0" />
+            <Sparkles size={20} className="text-[#9e1b32] shrink-0" />
             <div>
               <p className="font-medium text-neutral-100">Closed</p>
               {request.completedDate && (
@@ -112,7 +112,7 @@ export default function PrayerDetail() {
 
         {!request.isCompleted && request.requestStatus === 'Fulfilled' && (
           <div className="flex items-center gap-2 alert-info mb-5">
-            <CheckCircle size={20} className="text-[#9bada3] shrink-0" />
+            <CheckCircle size={20} className="text-[#9e1b32] shrink-0" />
             <div>
               <p className="font-medium text-neutral-100">
                 {request.isOwnedByCurrentUser
@@ -133,7 +133,7 @@ export default function PrayerDetail() {
           </div>
         )}
 
-        <h1 className="text-2xl font-bold text-white">{request.title}</h1>
+        <h1 className="text-2xl font-bold text-[var(--ink)]">{request.title}</h1>
 
         <div className="flex flex-wrap items-center gap-2 mt-3">
           {request.requestTypeName && (
@@ -159,13 +159,13 @@ export default function PrayerDetail() {
 
       <div className="content-card mt-6">
         <div className="flex items-center gap-2 mb-4">
-          <MessageSquare size={18} className="text-[#9bada3]" />
-          <h2 className="font-semibold text-white">Comments</h2>
+          <MessageSquare size={18} className="text-[#9e1b32]" />
+          <h2 className="font-semibold text-[var(--ink)]">Comments</h2>
         </div>
 
         {commentsLoading && (
           <div className="flex justify-center py-6">
-            <Loader2 className="animate-spin text-[#34C759]" size={24} />
+            <Loader2 className="animate-spin text-[#9e1b32]" size={24} />
           </div>
         )}
 
@@ -179,7 +179,7 @@ export default function PrayerDetail() {
               key={comment.id}
               className={`rounded-xl border px-4 py-3 ${
                 comment.isOwnComment
-                  ? 'border-[#3d4a44] bg-[#2f3834]/40'
+                  ? 'border-[#9e1b32]/40 bg-[#9e1b32]/10'
                   : 'border-neutral-700 bg-neutral-800/30'
               }`}
             >
@@ -201,7 +201,7 @@ export default function PrayerDetail() {
             placeholder="Add a comment..."
             rows={3}
             maxLength={2000}
-            className="w-full rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-3 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:border-[#34C759] resize-y"
+            className="w-full rounded-xl border border-[var(--trim)] bg-[var(--surface)] px-4 py-3 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:border-[#9e1b32] resize-y"
           />
           <button
             type="button"
@@ -271,7 +271,7 @@ export default function PrayerDetail() {
           !showDeleteConfirm ? (
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="w-full flex items-center justify-center gap-2 text-red-400 py-3 rounded-xl font-medium border border-red-900/50 hover:bg-red-950/30 transition"
+              className="w-full flex items-center justify-center gap-2 text-red-600 py-3 rounded-xl font-medium border border-red-300 hover:bg-red-50 transition"
             >
               <Trash2 size={18} />
               Delete Request

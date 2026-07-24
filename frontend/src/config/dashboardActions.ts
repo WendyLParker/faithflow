@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
-import { FilePlus, List, MessageCircle, Search, ShieldCheck } from 'lucide-react';
+import { Building2, FilePlus, List, MessageCircle, Search, ShieldCheck } from 'lucide-react';
 
-export type TileTone = 'slate' | 'sage' | 'sand' | 'mist' | 'clay';
+export type TileTone = 'slate' | 'sage' | 'sand' | 'mist' | 'clay' | 'stone';
 
 export type DashboardAction = {
   id: string;
@@ -12,34 +12,41 @@ export type DashboardAction = {
   tone: TileTone;
 };
 
+const lightTile = 'bg-[#f4f0e9] border-[#17130f] hover:bg-[#e7e2d9] hover:border-[#17130f]';
+
 export const tileToneStyles: Record<
   TileTone,
   { tile: string; icon: string; description: string }
 > = {
   slate: {
-    tile: 'bg-[#2e3640] border-[#3d4654] hover:bg-[#343d48] hover:border-[#4a5563]',
-    icon: 'text-[#9aa8b8]',
-    description: 'text-[#8b97a5]',
+    tile: lightTile,
+    icon: 'text-[#9e1b32]',
+    description: 'text-[#6f675b]',
   },
   sage: {
-    tile: 'bg-[#2f3834] border-[#3d4a44] hover:bg-[#354038] hover:border-[#4a5c54]',
-    icon: 'text-[#9bada3]',
-    description: 'text-[#8a9d93]',
+    tile: lightTile,
+    icon: 'text-[#6f7a5b]',
+    description: 'text-[#6f675b]',
   },
   sand: {
-    tile: 'bg-[#38342f] border-[#4a443d] hover:bg-[#3e3a35] hover:border-[#5c554d]',
-    icon: 'text-[#b5a99a]',
-    description: 'text-[#a39688]',
+    tile: lightTile,
+    icon: 'text-[#9c7a4d]',
+    description: 'text-[#6f675b]',
   },
   mist: {
-    tile: 'bg-[#2d3636] border-[#3b4848] hover:bg-[#333c3c] hover:border-[#4a5959]',
-    icon: 'text-[#96abab]',
-    description: 'text-[#859a9a]',
+    tile: lightTile,
+    icon: 'text-[#5f7370]',
+    description: 'text-[#6f675b]',
   },
   clay: {
-    tile: 'bg-[#3a2f2f] border-[#4d3f3f] hover:bg-[#413534] hover:border-[#5c4c4c]',
-    icon: 'text-[#c19a9a]',
-    description: 'text-[#ab8888]',
+    tile: lightTile,
+    icon: 'text-[#a65a4a]',
+    description: 'text-[#6f675b]',
+  },
+  stone: {
+    tile: lightTile,
+    icon: 'text-[#8a6f3e]',
+    description: 'text-[#6f675b]',
   },
 };
 
@@ -67,6 +74,14 @@ export const dashboardActions: DashboardAction[] = [
     to: '/search',
     icon: Search,
     tone: 'mist',
+  },
+  {
+    id: 'departments',
+    title: 'Departments',
+    description: 'See request types grouped by the department that handles them.',
+    to: '/departments',
+    icon: Building2,
+    tone: 'stone',
   },
   {
     id: 'ask',

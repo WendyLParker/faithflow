@@ -103,7 +103,7 @@ function BottomNavItem({
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
       className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[3.25rem] transition-colors ${
-        active ? 'text-white' : 'text-neutral-500 active:text-neutral-300'
+        active ? 'text-[#d12a44]' : 'text-neutral-500 active:text-white/80'
       }`}
     >
       <Icon size={22} strokeWidth={active ? 2.5 : 1.75} aria-hidden />
@@ -143,8 +143,8 @@ function AppContent() {
   const showBottomNav = isLoggedIn;
 
   return (
-    <div className="min-h-screen w-full bg-[#1e1e1e]">
-      <header className="sticky top-0 inset-x-0 z-50 w-full bg-black border-b border-neutral-800/80 pt-[env(safe-area-inset-top,0px)]">
+    <div className="min-h-screen w-full bg-[var(--bg)]">
+      <header className="sticky top-0 inset-x-0 z-50 w-full bg-black border-b border-white/10 pt-[env(safe-area-inset-top,0px)]">
         <div className="relative flex items-center justify-between h-14 px-4 w-full">
           <button
             type="button"
@@ -170,12 +170,12 @@ function AppContent() {
                 type="button"
                 aria-label={hasUnread ? `${unreadCount} unread notifications` : 'Notifications'}
                 onClick={() => setNotifOpen(true)}
-                className="relative p-2.5 text-white hover:text-neutral-300 transition-colors"
+                className="relative p-2.5 text-white hover:text-white/70 transition-colors"
               >
                 <Bell size={22} strokeWidth={2} />
                 {hasUnread && (
                   <span
-                    className="absolute top-0.5 right-0.5 min-w-[1.1rem] h-[1.1rem] px-[3px] flex items-center justify-center bg-[#E50914] rounded-full ring-2 ring-black text-[10px] font-bold leading-none text-white"
+                    className="absolute top-0.5 right-0.5 min-w-[1.1rem] h-[1.1rem] px-[3px] flex items-center justify-center bg-[#d12a44] rounded-full ring-2 ring-black text-[10px] font-bold leading-none text-white"
                     aria-hidden
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -190,7 +190,7 @@ function AppContent() {
                   aria-label="Account menu"
                   aria-expanded={profileOpen}
                   onClick={() => setProfileOpen((open) => !open)}
-                  className="p-2.5 text-white hover:text-neutral-300 transition-colors"
+                  className="p-2.5 text-white hover:text-white/70 transition-colors"
                 >
                   <User size={22} strokeWidth={2} />
                 </button>
@@ -203,16 +203,16 @@ function AppContent() {
                       className="fixed inset-0 z-40 cursor-default"
                       onClick={() => setProfileOpen(false)}
                     />
-                    <div className="absolute right-0 top-full mt-1 z-50 min-w-[12rem] rounded-md bg-neutral-900 border border-neutral-700 shadow-xl overflow-hidden">
+                    <div className="absolute right-0 top-full mt-1 z-50 min-w-[12rem] rounded-md bg-[var(--surface)] border border-[var(--trim)] shadow-xl overflow-hidden">
                       {greeting && (
-                        <div className="px-4 py-2.5 border-b border-neutral-800">
+                        <div className="px-4 py-2.5 border-b border-[var(--trim-soft)]">
                           <p className="text-xs text-neutral-500 truncate">{greeting}</p>
                         </div>
                       )}
                       <button
                         type="button"
                         onClick={() => { setProfileOpen(false); navigate('/profile'); }}
-                        className="flex w-full items-center gap-2 px-4 py-3 text-sm text-white hover:bg-neutral-800 transition-colors"
+                        className="flex w-full items-center gap-2 px-4 py-3 text-sm text-[var(--ink)] hover:bg-neutral-800 transition-colors"
                       >
                         <Settings size={16} />
                         Manage profile
@@ -220,7 +220,7 @@ function AppContent() {
                       <button
                         type="button"
                         onClick={handleLogout}
-                        className="flex w-full items-center gap-2 px-4 py-3 text-sm text-white hover:bg-neutral-800 transition-colors border-t border-neutral-800"
+                        className="flex w-full items-center gap-2 px-4 py-3 text-sm text-[var(--ink)] hover:bg-neutral-800 transition-colors border-t border-[var(--trim-soft)]"
                       >
                         <LogOut size={16} />
                         Sign out
@@ -234,7 +234,7 @@ function AppContent() {
             <button
               type="button"
               onClick={() => navigate('/login')}
-              className="text-sm font-semibold text-white hover:text-neutral-300 transition-colors"
+              className="text-sm font-semibold text-white hover:text-white/70 transition-colors"
             >
               Sign In
             </button>
@@ -320,7 +320,7 @@ function AppContent() {
       {showBottomNav && (
         <nav
           aria-label="Main navigation"
-          className="fixed bottom-0 inset-x-0 z-50 w-full bg-black border-t border-neutral-800/80 pb-[env(safe-area-inset-bottom,0px)]"
+          className="fixed bottom-0 inset-x-0 z-50 w-full bg-black border-t border-white/10 pb-[env(safe-area-inset-bottom,0px)]"
         >
           <div className="flex w-full max-w-lg mx-auto">
             {navItems.map((item) => (
