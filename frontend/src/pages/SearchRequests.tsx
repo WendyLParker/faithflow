@@ -53,7 +53,7 @@ export default function SearchRequests() {
 
       {isLoading && (
         <div className="flex justify-center py-12">
-          <Loader2 className="animate-spin text-[#34C759]" size={28} />
+          <Loader2 className="animate-spin text-[#9e1b32]" size={28} />
         </div>
       )}
 

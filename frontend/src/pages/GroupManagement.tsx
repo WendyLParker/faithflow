@@ -47,7 +47,7 @@ export default function GroupManagement() {
     return (
       <div className="page-container">
         <div className="flex justify-center py-20">
-          <Loader2 className="animate-spin text-[#34C759]" size={32} />
+          <Loader2 className="animate-spin text-[#9e1b32]" size={32} />
         </div>
       </div>
     );
@@ -103,7 +103,7 @@ export default function GroupManagement() {
                       </span>
                     )}
                     {myMembership && (
-                      <span className="text-xs text-[#9bada3] bg-[#2f3834] border border-[#3d4a44] px-2 py-0.5 rounded-full">
+                      <span className="text-xs text-[#9e1b32] bg-[#9e1b32]/10 border border-[#9e1b32]/30 px-2 py-0.5 rounded-full">
                         Joined
                       </span>
                     )}
@@ -121,7 +121,7 @@ export default function GroupManagement() {
                     title="Delete group"
                     aria-label={`Delete ${group.name}`}
                     onClick={() => setDeletingGroupId(group.id)}
-                    className="p-2 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-950/30 transition shrink-0"
+                    className="p-2 rounded-lg text-neutral-500 hover:text-red-600 hover:bg-red-100 transition shrink-0"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -191,10 +191,10 @@ function DeleteGroupConfirm({
   const hasMembers = members.length > 0;
 
   return (
-    <div className="mt-3 p-3 rounded-xl bg-red-950/20 border border-red-900/40 space-y-3">
+    <div className="mt-3 p-3 rounded-xl bg-red-50 border border-red-200 space-y-3">
       {membersLoading ? (
         <div className="flex justify-center py-2">
-          <Loader2 className="animate-spin text-red-400" size={18} />
+          <Loader2 className="animate-spin text-red-600" size={18} />
         </div>
       ) : (
         <>
@@ -336,7 +336,7 @@ function AdminsSection({ currentUserId }: { currentUserId?: string }) {
   return (
     <div className="content-card mt-8">
       <div className="flex items-center gap-2 mb-1">
-        <ShieldCheck size={18} className="text-[#34C759]" />
+        <ShieldCheck size={18} className="text-[#9e1b32]" />
         <h2 className="font-semibold text-neutral-100">Admins</h2>
       </div>
       <p className="text-xs text-neutral-500 mb-4">
@@ -344,15 +344,15 @@ function AdminsSection({ currentUserId }: { currentUserId?: string }) {
       </p>
 
       {isLoading ? (
-        <div className="flex justify-center py-4"><Loader2 className="animate-spin text-[#34C759]" size={20} /></div>
+        <div className="flex justify-center py-4"><Loader2 className="animate-spin text-[#9e1b32]" size={20} /></div>
       ) : (
         <ul className="space-y-2 mb-4">
           {admins.map((a) => (
-            <li key={a.userId} className="flex items-center justify-between gap-3 bg-neutral-900/60 rounded-xl px-3 py-2.5">
+            <li key={a.userId} className="flex items-center justify-between gap-3 bg-[var(--surface-2)] rounded-xl px-3 py-2.5">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-neutral-100 truncate">
                   {userPrimaryLabel(a)}
-                  {a.userId === currentUserId && <span className="ml-1.5 text-[#34C759] text-xs">(you)</span>}
+                  {a.userId === currentUserId && <span className="ml-1.5 text-[#9e1b32] text-xs">(you)</span>}
                 </p>
                 {a.displayName && a.userEmail && (
                   <p className="text-xs text-neutral-500 truncate">{a.userEmail}</p>
@@ -371,7 +371,7 @@ function AdminsSection({ currentUserId }: { currentUserId?: string }) {
           </summary>
           <ul className="space-y-2 mt-2">
             {members.map((m) => (
-              <li key={m.userId} className="flex items-center justify-between gap-3 bg-neutral-900/60 rounded-xl px-3 py-2.5">
+              <li key={m.userId} className="flex items-center justify-between gap-3 bg-[var(--surface-2)] rounded-xl px-3 py-2.5">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-neutral-100 truncate">{userPrimaryLabel(m)}</p>
                   {m.displayName && m.userEmail && (
@@ -389,7 +389,7 @@ function AdminsSection({ currentUserId }: { currentUserId?: string }) {
                     })
                   }
                   disabled={setRole.isPending}
-                  className="text-xs text-[#34C759] hover:underline disabled:opacity-50"
+                  className="text-xs text-[#9e1b32] hover:underline disabled:opacity-50"
                 >
                   Make admin
                 </button>
@@ -419,7 +419,7 @@ function GroupMembers({
   const updateManager = useUpdateGroupManager(groupId);
 
   if (isLoading) {
-    return <div className="flex justify-center py-4"><Loader2 className="animate-spin text-[#34C759]" size={20} /></div>;
+    return <div className="flex justify-center py-4"><Loader2 className="animate-spin text-[#9e1b32]" size={20} /></div>;
   }
 
   if (members.length === 0) {
@@ -432,11 +432,11 @@ function GroupMembers({
         const isMe = currentUser?.sub === m.userId;
         const canRemove = canManage || isMe;
         return (
-          <li key={m.id} className="flex items-center justify-between gap-3 bg-neutral-900/60 rounded-xl px-3 py-2.5">
+          <li key={m.id} className="flex items-center justify-between gap-3 bg-[var(--surface-2)] rounded-xl px-3 py-2.5">
             <div className="min-w-0">
               <p className="text-sm font-medium text-neutral-100 truncate">
                 {m.displayName}
-                {isMe && <span className="ml-1.5 text-[#34C759] text-xs">(you)</span>}
+                {isMe && <span className="ml-1.5 text-[#9e1b32] text-xs">(you)</span>}
                 {m.canManage && <span className="ml-1.5 text-xs text-neutral-500">· manager</span>}
               </p>
               <p className="text-xs text-neutral-500 truncate">{m.userEmail}</p>
@@ -454,7 +454,7 @@ function GroupMembers({
                   }
                   disabled={updateManager.isPending}
                   className={`p-1.5 rounded-lg transition hover:bg-neutral-700 ${
-                    m.canManage ? 'text-[#34C759]' : 'text-neutral-500 hover:text-white'
+                    m.canManage ? 'text-[#9e1b32]' : 'text-neutral-500 hover:text-[var(--ink)]'
                   }`}
                 >
                   <ShieldCheck size={16} />
@@ -471,7 +471,7 @@ function GroupMembers({
                     })
                   }
                   disabled={updateEmail.isPending}
-                  className="p-1.5 rounded-lg transition text-neutral-400 hover:text-white hover:bg-neutral-700"
+                  className="p-1.5 rounded-lg transition text-neutral-400 hover:text-[var(--ink)] hover:bg-neutral-700"
                 >
                   {m.emailNotificationsEnabled ? <Mail size={16} /> : <BellOff size={16} />}
                 </button>
@@ -482,7 +482,7 @@ function GroupMembers({
                   title="Remove from group"
                   onClick={() => removeMember.mutate(m.id)}
                   disabled={removeMember.isPending}
-                  className="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-950/30 transition"
+                  className="p-1.5 rounded-lg text-neutral-500 hover:text-red-600 hover:bg-red-100 transition"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -532,7 +532,7 @@ function AddMemberForm({ groupId }: { groupId: number }) {
       <p className="form-label">Add a member</p>
 
       {selectedUser ? (
-        <div className="flex items-center justify-between gap-3 bg-neutral-900/60 rounded-xl px-3 py-2.5">
+        <div className="flex items-center justify-between gap-3 bg-[var(--surface-2)] rounded-xl px-3 py-2.5">
           <div className="min-w-0">
             <p className="text-sm font-medium text-neutral-100 truncate">
               {userPrimaryLabel(selectedUser)}
@@ -588,7 +588,7 @@ function AddMemberForm({ groupId }: { groupId: number }) {
               type="checkbox"
               checked={emailNotifs}
               onChange={(e) => setEmailNotifs(e.target.checked)}
-              className="w-4 h-4 accent-[#34C759]"
+              className="w-4 h-4 accent-[#9e1b32]"
             />
             <span className="text-sm text-neutral-300">Email notifications enabled</span>
           </label>

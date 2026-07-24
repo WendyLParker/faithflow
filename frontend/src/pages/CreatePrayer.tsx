@@ -89,7 +89,7 @@ export default function CreatePrayer() {
           <p className="form-label mb-2">Request type</p>
           {typesLoading ? (
             <div className="flex justify-center py-4">
-              <Loader2 className="animate-spin text-[#34C759]" size={24} />
+              <Loader2 className="animate-spin text-[#9e1b32]" size={24} />
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -143,7 +143,7 @@ export default function CreatePrayer() {
             type="button"
             onClick={handleEstimate}
             disabled={!canEstimate}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium border border-[#3d4a44] text-[#9bada3] hover:bg-[#2f3834]/40 transition disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium border border-[#9e1b32]/40 text-[#9e1b32] hover:bg-[#9e1b32]/10 transition disabled:opacity-50"
           >
             {estimateCost.isPending ? (
               <Loader2 size={18} className="animate-spin" />
@@ -166,8 +166,8 @@ export default function CreatePrayer() {
             <div className="content-card mt-3 space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Sparkles size={16} className="text-[#9bada3]" />
-                  <span className="font-semibold text-white">Estimated cost</span>
+                  <Sparkles size={16} className="text-[#9e1b32]" />
+                  <span className="font-semibold text-[var(--ink)]">Estimated cost</span>
                 </div>
                 <span className="badge capitalize">{estimate.confidence} confidence</span>
               </div>
@@ -179,9 +179,9 @@ export default function CreatePrayer() {
                     {currencyFmt(estimate.low_estimate)}
                   </p>
                 </div>
-                <div className="rounded-xl border border-[#3d4a44] bg-[#2f3834]/40 py-2">
+                <div className="rounded-xl border border-[#9e1b32]/40 bg-[#9e1b32]/10 py-2">
                   <p className="text-xs text-neutral-400">Most likely</p>
-                  <p className="text-sm font-bold text-white">
+                  <p className="text-sm font-bold text-[var(--ink)]">
                     {currencyFmt(estimate.most_likely)}
                   </p>
                 </div>
@@ -208,7 +208,7 @@ export default function CreatePrayer() {
             <p className="form-label mb-2">Assign to</p>
             {groupsLoading ? (
               <div className="flex justify-center py-4">
-                <Loader2 className="animate-spin text-[#34C759]" size={24} />
+                <Loader2 className="animate-spin text-[#9e1b32]" size={24} />
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">

@@ -6,6 +6,44 @@
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 
+/*
+ * App palette: greige main surfaces, black trim, crimson accent.
+ * The `neutral` scale is remapped to a warm greige ramp. It is intentionally
+ * inverted relative to Tailwind's default (low steps = dark ink, high steps =
+ * light greige) so the existing utility classes that were authored for a dark
+ * UI now render as a cohesive light greige theme.
+ */
+@theme {
+  --color-neutral-50: #1a1714;
+  --color-neutral-100: #221f1b;
+  --color-neutral-200: #2b2721;
+  --color-neutral-300: #423c34;
+  --color-neutral-400: #6f675b;
+  --color-neutral-500: #8a8175;
+  --color-neutral-600: #b9b0a1;
+  --color-neutral-700: #d6cfc2;
+  --color-neutral-800: #e4ded4;
+  --color-neutral-900: #ece7de;
+  --color-neutral-950: #f3efe8;
+}
+
+:root {
+  --bg: #ece7de;
+  --surface: #f4f0e9;
+  --surface-2: #e0d9cd;
+  --trim: #17130f;
+  --trim-soft: #cabfae;
+  --ink: #1c1917;
+  --ink-2: #3f382f;
+  --muted: #6f675b;
+  --accent: #9e1b32;
+  --accent-hover: #86152a;
+  --accent-active: #6f1122;
+  --accent-contrast: #ffffff;
+  --accent-soft: rgba(158, 27, 50, 0.1);
+  --accent-soft-border: rgba(158, 27, 50, 0.28);
+}
+
 @layer base {
   #root,
   #root *,
@@ -22,6 +60,8 @@
     tab-size: 4;
     min-height: 100%;
     width: 100%;
+    color: var(--ink);
+    background-color: var(--bg);
   }
 
   #root img,
@@ -45,17 +85,17 @@
 
 @layer components {
   .btn-apple {
-    background-color: #34c759;
-    color: #fff;
+    background-color: var(--accent);
+    color: var(--accent-contrast);
     transition: background-color 0.15s ease;
   }
 
   .btn-apple:hover:not(:disabled) {
-    background-color: #30b350;
+    background-color: var(--accent-hover);
   }
 
   .btn-apple:active:not(:disabled) {
-    background-color: #2aa347;
+    background-color: var(--accent-active);
   }
 
   .btn-apple:disabled {
@@ -65,7 +105,7 @@
 
   .ring-apple:focus {
     outline: none;
-    box-shadow: 0 0 0 2px #1e1e1e, 0 0 0 4px #34c759;
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
   }
 
   .page-container {
@@ -73,80 +113,136 @@
   }
 
   .page-title {
-    @apply text-2xl font-bold text-white mb-1;
+    @apply text-2xl font-bold mb-1;
+    color: var(--ink);
   }
 
   .page-subtitle {
-    @apply text-sm text-neutral-400 mb-6;
+    @apply text-sm mb-6;
+    color: var(--muted);
   }
 
   .form-label {
-    @apply block text-sm font-medium text-neutral-300 mb-1.5;
+    @apply block text-sm font-medium mb-1.5;
+    color: var(--ink-2);
   }
 
   .form-input {
-    @apply w-full p-3 border border-neutral-600 rounded-xl bg-neutral-800 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#34C759] focus:border-transparent;
+    @apply w-full p-3 rounded-xl focus:outline-none;
+    background-color: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--trim);
+  }
+
+  .form-input::placeholder {
+    color: var(--muted);
+  }
+
+  .form-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent);
   }
 
   .content-card {
-    @apply bg-neutral-800/90 border border-neutral-600 rounded-2xl p-5 shadow-sm;
+    @apply rounded-2xl p-5 shadow-sm;
+    background-color: var(--surface);
+    border: 1px solid var(--trim);
   }
 
   .content-card-sm {
-    @apply bg-neutral-800/90 border border-neutral-600 rounded-xl p-4 shadow-sm;
+    @apply rounded-xl p-4 shadow-sm;
+    background-color: var(--surface);
+    border: 1px solid var(--trim);
   }
 
   .back-link {
-    @apply inline-flex items-center gap-1.5 text-sm text-neutral-400 hover:text-[#34C759] mb-4 transition-colors;
+    @apply inline-flex items-center gap-1.5 text-sm mb-4 transition-colors;
+    color: var(--muted);
+  }
+
+  .back-link:hover {
+    color: var(--accent);
   }
 
   .chip {
-    @apply text-sm px-3 py-1.5 rounded-full border bg-neutral-800 text-neutral-300 border-neutral-600 hover:border-neutral-500 transition;
+    @apply text-sm px-3 py-1.5 rounded-full transition;
+    background-color: var(--surface-2);
+    color: var(--ink-2);
+    border: 1px solid var(--trim-soft);
+  }
+
+  .chip:hover {
+    border-color: var(--trim);
   }
 
   .chip-selected {
-    background-color: #34c759;
-    color: #fff;
-    border-color: #34c759;
+    background-color: var(--accent);
+    color: var(--accent-contrast);
+    border-color: var(--accent);
   }
 
   .filter-btn {
-    @apply flex-1 min-w-0 py-2.5 text-sm font-semibold rounded-xl transition border border-neutral-600;
-    @apply bg-neutral-800 text-neutral-300 hover:border-neutral-500;
+    @apply flex-1 min-w-0 py-2.5 text-sm font-semibold rounded-xl transition;
+    background-color: var(--surface);
+    color: var(--ink-2);
+    border: 1px solid var(--trim-soft);
+  }
+
+  .filter-btn:hover {
+    border-color: var(--trim);
   }
 
   .filter-btn-active {
-    background-color: #34c759;
-    color: #fff;
-    border-color: #34c759;
+    background-color: var(--accent);
+    color: var(--accent-contrast);
+    border-color: var(--accent);
   }
 
   .message-success {
-    @apply text-sm text-[#9bada3];
+    @apply text-sm;
+    color: var(--accent);
   }
 
   .message-error {
-    @apply text-sm text-red-400;
+    @apply text-sm;
+    color: #b23636;
   }
 
   .alert-error {
-    @apply bg-red-950/40 border border-red-800/60 text-red-400 p-4 rounded-xl text-sm;
+    @apply p-4 rounded-xl text-sm;
+    background-color: #f7e6e6;
+    border: 1px solid #e0b4b4;
+    color: #9b2c2c;
   }
 
   .alert-info {
-    @apply bg-[#2e3640] border border-[#3d4654] text-neutral-300 text-sm rounded-xl px-4 py-3 leading-relaxed;
+    @apply text-sm rounded-xl px-4 py-3 leading-relaxed;
+    background-color: var(--surface-2);
+    border: 1px solid var(--trim-soft);
+    color: var(--ink-2);
   }
 
   .link-accent {
-    @apply text-[#34C759] font-medium hover:text-[#30B350] transition-colors;
+    @apply font-medium transition-colors;
+    color: var(--accent);
+  }
+
+  .link-accent:hover {
+    color: var(--accent-hover);
   }
 
   .badge {
-    @apply text-xs bg-neutral-700 text-neutral-300 px-2.5 py-1 rounded-full border border-neutral-600;
+    @apply text-xs px-2.5 py-1 rounded-full;
+    background-color: var(--surface-2);
+    color: var(--ink-2);
+    border: 1px solid var(--trim-soft);
   }
 
   .badge-success {
-    @apply text-xs font-medium text-[#9bada3] bg-[#2f3834] border border-[#3d4a44] px-2 py-0.5 rounded-full inline-flex items-center gap-1;
+    @apply text-xs font-medium px-2 py-0.5 rounded-full inline-flex items-center gap-1;
+    background-color: var(--accent-soft);
+    border: 1px solid var(--accent-soft-border);
+    color: var(--accent);
   }
 }
 
@@ -160,4 +256,6 @@ body {
 
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg);
+  color: var(--ink);
 }
